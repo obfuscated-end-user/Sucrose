@@ -77,9 +77,9 @@ class Music(commands.Cog):
             vc = await ctx.author.voice.channel.connect(cls=wavelink.Player)
         if ctx.author.voice.channel.id != vc.channel.id:
             play_embed = discord.Embed(
-                    description=f"You must be in the same voice channel as the bot.",
-                    color=anemo_color
-                )
+                description=f"You must be in the same voice channel as the bot.",
+                color=anemo_color
+            )
             await ctx.respond(embed=play_embed, delete_after=15)
 
         # the idea is to check the search query for certain conditions when the user tries to play something. if it matches with one of the conditions, do something appropriate.
@@ -88,9 +88,9 @@ class Music(commands.Cog):
         if "https://www.youtube.com/playlist?list=" in search or "https://music.youtube.com/playlist?list=" in search:
             youtube_playlist = await wavelink.YouTubePlaylist.search(query=search)
             play_embed = discord.Embed(
-                    description=f"Loading YouTube playlist: `{youtube_playlist}`",
-                    color=anemo_color
-                )
+                description=f"Loading YouTube playlist: `{youtube_playlist}`",
+                color=anemo_color
+            )
             await ctx.send(embed=play_embed)
             if not youtube_playlist:
                 play_embed = discord.Embed(
@@ -146,9 +146,9 @@ class Music(commands.Cog):
             # album or playlist
             elif "album" in search or "playlist" in search:
                 play_embed = discord.Embed(
-                        description="Loading Spotify playlist/album...",
-                        color=anemo_color
-                    )
+                    description="Loading Spotify playlist/album...",
+                    color=anemo_color
+                )
                 await ctx.send(embed=play_embed)
                 spotify_tracks = await spotify.SpotifyTrack.search(query=search, type=spotify.SpotifySearchType.album)
                 if not spotify_tracks:
@@ -372,9 +372,9 @@ class Music(commands.Cog):
         vc = ctx.voice_client
         if not vc:
             shuffle_embed = discord.Embed(
-                    description="You must be in a voice channel to use this command.",
-                    color=anemo_color
-                )
+                description="You must be in a voice channel to use this command.",
+                color=anemo_color
+            )
             await ctx.respond(embed=shuffle_embed, delete_after=15)
         temp_queue = self.song_queue[1:]
         for _ in range(1, len(self.song_queue)):
@@ -393,8 +393,8 @@ class Music(commands.Cog):
         vc = ctx.voice_client
         if not vc:
             now_playing_embed = discord.Embed(
-                    description="You must be in a voice channel to use this command.",
-                    color=anemo_color
+                description="You must be in a voice channel to use this command.",
+                color=anemo_color
             )
             await ctx.respond(embed=now_playing_embed, delete_after=15)
         now_playing_embed = discord.Embed(
