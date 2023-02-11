@@ -1,5 +1,5 @@
 # Sucrose
-## Discord music bot.
+Discord music bot.
 
 Supports:
 * YouTube (videos and playlists)
