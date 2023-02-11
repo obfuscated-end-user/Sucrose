@@ -22,8 +22,7 @@ class Basic(commands.Cog):
             "Hi!",
             "sup bro you good"
         ]
-        response = random.choice(hello_quotes)
-        await ctx.respond(response)
+        await ctx.respond(random.choice(hello_quotes))
 
     @bot.bridge_command(aliases=["latency", "ms"])
     async def ping(self, ctx):
