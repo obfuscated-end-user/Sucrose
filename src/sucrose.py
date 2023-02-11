@@ -35,7 +35,7 @@ async def on_ready():
 @bot.event
 async def on_connect():
     print("Connected!")
-    await bot.change_presence(activity=discord.Game(name="God"), status=discord.Status.dnd)
+    await bot.change_presence(activity=discord.Game(name="God"), status=discord.Status.idle)
     # await bot.change_presence(status=discord.Status.offline)
 
 cogs_list = [
