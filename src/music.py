@@ -1,10 +1,12 @@
 # uses pycord
-import random
-import wavelink
-import time
+import discord
 import os
-from dotenv import load_dotenv
+import random
+import time
+import wavelink
 from discord.ext import bridge, commands
+from dotenv import load_dotenv
+from sucrose import anemo_color
 from wavelink.ext import spotify
 
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
@@ -19,7 +21,7 @@ class Music(commands.Cog):
         self.song_queue = []
         self.bot.loop.create_task(self.connect_nodes())
 
-    def format_song_length(self, seconds):
+    def format_song_length(self, seconds) -> str:
         """Formats the length of a track in HH:MM:SS."""
         if seconds < 3600: # 3600 seconds is equal to 1 hour
             return time.strftime("%M:%S", time.gmtime(seconds))
@@ -74,16 +76,28 @@ class Music(commands.Cog):
         if not vc:
             vc = await ctx.author.voice.channel.connect(cls=wavelink.Player)
         if ctx.author.voice.channel.id != vc.channel.id:
-            await ctx.respond("You must be in the same voice channel as the bot.")
+            play_embed = discord.Embed(
+                    description=f"You must be in the same voice channel as the bot.",
+                    color=anemo_color
+                )
+            await ctx.respond(embed=play_embed, delete_after=15)
 
         # the idea is to check the search query for certain conditions when the user tries to play something. if it matches with one of the conditions, do something appropriate.
         # YOUTUBE PLAYLIST OR YOUTUBE MUSIC PLAYLIST
         # bootleg ass regex
         if "https://www.youtube.com/playlist?list=" in search or "https://music.youtube.com/playlist?list=" in search:
             youtube_playlist = await wavelink.YouTubePlaylist.search(query=search)
-            await ctx.respond(f"Loading YouTube playlist: `{youtube_playlist}`")
+            play_embed = discord.Embed(
+                    description=f"Loading YouTube playlist: `{youtube_playlist}`",
+                    color=anemo_color
+                )
+            await ctx.send(embed=play_embed)
             if not youtube_playlist:
-                await ctx.respond(f"Playlist `{search}` not found. Try searching for another playlist.")
+                play_embed = discord.Embed(
+                    description=f"Playlist `{search}` not found. Try searching for another playlist.",
+                    color=anemo_color
+                )
+                await ctx.respond(embed=play_embed, delete_after=15)
             if len(self.song_queue) == 0:
                 temp_playlist = []
                 for track in youtube_playlist.tracks:
@@ -91,15 +105,22 @@ class Music(commands.Cog):
                 self.song_queue += temp_playlist
                 await vc.resume()
                 await vc.play(self.song_queue[0], replace=False)
-                await ctx.respond(f"Added {len(temp_playlist)} tracks to the queue.")
-                await ctx.respond(f"Now playing: `{self.song_queue[0].title}` **`({self.format_song_length(self.song_queue[0].length)})`**.")
+                play_embed = discord.Embed(
+                    description=f"Added {len(temp_playlist)} tracks to the queue.\nNow playing: `{self.song_queue[0].title}` **`({self.format_song_length(self.song_queue[0].length)})`**.",
+                    color=anemo_color
+                )
+                await ctx.respond(embed=play_embed)
                 temp_playlist = []
             elif len(self.song_queue) > 0 or vc.is_playing():
                 temp_playlist = []
                 for track in youtube_playlist.tracks:
                     temp_playlist.append(track)
                 self.song_queue += temp_playlist
-                await ctx.respond(f"Added {len(temp_playlist)} tracks to the queue.")
+                play_embed = discord.Embed(
+                    description=f"Added {len(temp_playlist)} tracks to the queue.",
+                    color=anemo_color
+                )
+                await ctx.respond(embed=play_embed, delete_after=15)
                 temp_playlist = []
         # SPOTIFY
         elif "https://open.spotify.com/" in search:
@@ -110,16 +131,32 @@ class Music(commands.Cog):
                     self.song_queue.append(spotify_track)
                     await vc.resume()
                     await vc.play(self.song_queue[0], replace=False) # play it
-                    await ctx.respond(f"Now playing: `{self.song_queue[0].title}` **`({self.format_song_length(spotify_track.length)})`**.")
+                    play_embed = discord.Embed(
+                        description=f"Now playing: `{self.song_queue[0].title}` **`({self.format_song_length(spotify_track.length)})`**.",
+                        color=anemo_color
+                    )
+                    await ctx.respond(embed=play_embed)
                 elif len(self.song_queue) > 0 or vc.is_playing():
                     self.song_queue.append(spotify_track)
-                    await ctx.respond(f"`{spotify_track.title}` added to the queue **`({self.format_song_length(spotify_track.length)})`**.")
+                    play_embed = discord.Embed(
+                        description=f"`{spotify_track.title}` added to the queue **`({self.format_song_length(spotify_track.length)})`**.",
+                        color=anemo_color
+                    )
+                    await ctx.respond(embed=play_embed, delete_after=15)
             # album or playlist
             elif "album" in search or "playlist" in search:
-                await ctx.send(f"Loading Spotify playlist/album...")
+                play_embed = discord.Embed(
+                        description="Loading Spotify playlist/album...",
+                        color=anemo_color
+                    )
+                await ctx.send(embed=play_embed)
                 spotify_tracks = await spotify.SpotifyTrack.search(query=search, type=spotify.SpotifySearchType.album)
                 if not spotify_tracks:
-                    await ctx.respond(f"`{search}` not found. Try searching for another playlist or album.")
+                    play_embed = discord.Embed(
+                        description=f"`{search}` not found. Try searching for another playlist or album.",
+                        color=anemo_color
+                    )
+                    await ctx.respond(embed=play_embed, delete_after=15)
                 if len(self.song_queue) == 0:
                     temp_playlist = []
                     for track in spotify_tracks:
@@ -127,29 +164,48 @@ class Music(commands.Cog):
                     self.song_queue += temp_playlist
                     await vc.resume()
                     await vc.play(self.song_queue[0], replace=False)
-                    await ctx.respond(f"Added {len(temp_playlist)} tracks to the queue.")
-                    await ctx.respond(f"Now playing: `{self.song_queue[0].title}` **`({self.format_song_length(self.song_queue[0].length)})`**.")
+                    play_embed = discord.Embed(
+                        description=f"Added {len(temp_playlist)} tracks to the queue.\nNow playing: `{self.song_queue[0].title}` **`({self.format_song_length(self.song_queue[0].length)})`**.",
+                        color=anemo_color
+                    )
+                    await ctx.respond(embed=play_embed, delete_after=15)
                     temp_playlist = []
                 elif len(self.song_queue) > 0 or vc.is_playing():
                     temp_playlist = []
                     for track in spotify_tracks:
                         temp_playlist.append(track)
                     self.song_queue += temp_playlist
-                    await ctx.respond(f"Added {len(temp_playlist)} tracks to the queue.")
+                    play_embed = discord.Embed(
+                        description=f"Added {len(temp_playlist)} tracks to the queue.",
+                        color=anemo_color
+                    )
+                    await ctx.respond(embed=play_embed, delete_after=15)
                     temp_playlist = []
         # defaults to youtube if everything else fails
         else:
             song = await wavelink.YouTubeTrack.search(query=f"\"{search}\"", return_first=True)
             if not song:
-                await ctx.respond(f"No songs found with query `{search}`. Try searching for another song.")
+                play_embed = discord.Embed(
+                    description=f"No songs found with query `{search}`. Try searching for another song.",
+                    color=anemo_color
+                )
+                await ctx.respond(embed=play_embed, delete_after=15)
             if len(self.song_queue) == 0: # if queue is empty
                 self.song_queue.append(song) # put song in queue
                 await vc.resume()
                 await vc.play(self.song_queue[0], replace=False) # play it
-                await ctx.respond(f"Now playing: `{self.song_queue[0].title}` **`({self.format_song_length(song.length)})`**.")
+                play_embed = discord.Embed(
+                    description=f"Now playing: `{self.song_queue[0].title}` **`({self.format_song_length(song.length)})`**.",
+                    color=anemo_color
+                )
+                await ctx.respond(embed=play_embed)
             elif len(self.song_queue) > 0 or vc.is_playing():
                 self.song_queue.append(song)
-                await ctx.respond(f"`{song.title}` added to the queue **`({self.format_song_length(song.length)})`**.")
+                play_embed = discord.Embed(
+                    description=f"`{song.title}` added to the queue **`({self.format_song_length(song.length)})`**.",
+                    color=anemo_color
+                )
+                await ctx.respond(embed=play_embed, delete_after=15)
 
     @bot.bridge_command(aliases=["next", "kip", "slip", "n", "s", "fuck_off"])
     async def skip(self, ctx):
@@ -158,18 +214,30 @@ class Music(commands.Cog):
         if not vc:
             vc = await ctx.author.voice.channel.connect(cls=wavelink.Player)
         if ctx.author.voice.channel.id != vc.channel.id:
-            await ctx.respond("You must be in the same voice channel as the bot.")
+            skip_embed = discord.Embed(
+                description="You must be in the same voice channel as the bot.",
+                color=anemo_color
+            )
+            await ctx.respond(embed=skip_embed, delete_after=15)
         if len(self.song_queue) > 1: # if there is at least 1 song in the queue
             await vc.pause() # done for technical reasons. looks fucking stupid though.
             await vc.resume()
             await vc.play(self.song_queue[1], replace=True) # play it
-            await ctx.respond(f"Skipped `{self.song_queue[0]}` **`({self.format_song_length(self.song_queue[0].length)})`**. Now playing: `{self.song_queue[1]}` **`({self.format_song_length(self.song_queue[1].length)})`**")
+            skip_embed = discord.Embed(
+                description=f"Skipped `{self.song_queue[0]}` **`({self.format_song_length(self.song_queue[0].length)})`**. Now playing: `{self.song_queue[1]}` **`({self.format_song_length(self.song_queue[1].length)})`**",
+                color=anemo_color
+            )
+            await ctx.respond(embed=skip_embed, delete_after=15)
         elif len(self.song_queue) == 1: # if queue has only one song
             try:
                 song_length = self.format_song_length(self.song_queue[0].length)
                 await vc.pause()
-                await vc.play(self.song_queue[0], replace=True)
-                await ctx.respond(f"Now playing the last song on the queue: `{self.song_queue[0]}` **`({song_length})`**")
+                # await vc.play(self.song_queue[0], replace=True)
+                skip_embed = discord.Embed(
+                    description=f"Now playing the last song on the queue: `{self.song_queue[0]}` **`({song_length})`**",
+                    color=anemo_color
+                )
+                await ctx.respond(embed=skip_embed, delete_after=15)
                 if len(self.song_queue) == 1:
                     await vc.stop()
                     await vc.resume()
@@ -178,20 +246,36 @@ class Music(commands.Cog):
                 pass
         elif len(self.song_queue) <= 0:
             await vc.stop()
-            await ctx.respond("Queue is empty.")
+            skip_embed = discord.Embed(
+                description="Queue is empty.",
+                color=anemo_color
+            )
+            await ctx.respond(embed=skip_embed, delete_after=15)
 
     @bot.bridge_command(aliases=["top", "halt", "shutup", "stfu", "tigil", "hinto", "yamero", "やめろ"])
     async def stop(self, ctx):
         """Stops the current song. Stopped song cannot be resumed afterwards."""
         vc = ctx.voice_client
         if not vc: # if not in voice channel
-            await ctx.respond("You must be in the same voice channel as me to stop the current song.")
+            stop_embed = discord.Embed(
+                description="You must be in the same voice channel as me to stop the current song.",
+                color=anemo_color
+            )
+            await ctx.respond(embed=stop_embed, delete_after=15)
         if not vc.is_playing():
-            await ctx.respond("No song is playing.")
+            stop_embed = discord.Embed(
+                description="No song is playing.",
+                color=anemo_color
+            )
+            await ctx.respond(embed=stop_embed, delete_after=15)
         if vc.is_playing():
             song_length = self.format_song_length(self.song_queue[0].length)
             await vc.stop()
-            await ctx.respond(f"Stopped playing `{self.song_queue[0]}` **`({song_length})`**.")
+            stop_embed = discord.Embed(
+                description=f"Stopped playing `{self.song_queue[0]}` **`({song_length})`**.",
+                color=anemo_color
+            )
+            await ctx.respond(embed=stop_embed, delete_after=15)
             self.song_queue = []
             await vc.disconnect()
 
@@ -200,92 +284,175 @@ class Music(commands.Cog):
         """Pauses the current song. Use s!resume to resume playing the song."""
         vc = ctx.voice_client
         if not vc or not vc.is_playing(): # if not in voice channel
-            await ctx.respond("I am currently not playing anything.")
+            await vc.pause()
+            pause_embed = discord.Embed(
+                description="I am currently not playing anything.",
+                color=anemo_color
+            )
+            await ctx.respond(embed=pause_embed, delete_after=15)
         elif vc.is_paused(): # do nothing if song is paused
             return
         if vc.is_playing():
             await vc.pause()
-            await ctx.respond(f"Paused `{self.song_queue[0]}`. Type `s!resume` to resume playback.")
+            pause_embed = discord.Embed(
+                description=f"Paused `{self.song_queue[0]}`. Type `s!resume` to resume playback.",
+                color=anemo_color
+            )
+            await ctx.respond(embed=pause_embed, delete_after=15)
 
     @bot.bridge_command(aliases=["res", "rs"])
     async def resume(self, ctx):
         """Resumes the current paused song. Does nothing if the current song is playing."""
         vc = ctx.voice_client
         if not vc or not vc.is_playing():
-            await ctx.respond("You must be in the same voice channel as the bot to use this command.")
+            resume_embed = discord.Embed(
+                description="You must be in the same voice channel as the bot to use this command.",
+                color=anemo_color
+            )
+            await ctx.respond(embed=resume_embed, delete_after=15)
         elif not vc.is_paused(): # do nothing if song is not paused
             return
         elif vc.is_paused():
             await vc.resume()
-            await ctx.respond(f"Resuming `{self.song_queue[0]}`.")
+            resume_embed = discord.Embed(
+                description=f"Resuming `{self.song_queue[0]}`.",
+                color=anemo_color
+            )
+            await ctx.respond(embed=resume_embed, delete_after=15)
 
     @bot.bridge_command(aliases=["q", "list", "playlist"])
     async def queue(self, ctx, page=1):
         """Shows the queue. Can be used with an optional integer parameter to show a specific page."""
         vc = ctx.voice_client
         if not vc:
-            await ctx.respond("You must be in a voice channel to use this command.")
+            queue_embed = discord.Embed(
+                description="You must be in a voice channel to use this command.",
+                color=anemo_color
+            )
+            await ctx.respond(embed=queue_embed, delete_after=15)
         if len(self.song_queue) < 1:
-            await ctx.respond("There are no songs in the queue.")
+            queue_embed = discord.Embed(
+                description="There are no songs in the queue.",
+                color=anemo_color
+            )
+            await ctx.respond(embed=queue_embed, delete_after=15)
         else:
             song_queue_chunk_size = 10 # divides the queue into 10 tracks each
             song_queue_chunked  = [self.song_queue[i : i + song_queue_chunk_size] for i in range(0, len(self.song_queue), song_queue_chunk_size)]
             first_track = True # used for the "current track" thing in the queue
+
+            song_queue_length_seconds = 0 # the length of the whole playlist
+            for song in self.song_queue:
+                song_queue_length_seconds += song.length
+
+            queue_embed = discord.Embed(
+                title="Music queue",
+                description=f"\nType a number to show a specific page. For example, `s!queue 2` will show the second page.\n**Song count:** `{len(self.song_queue)}`, **Total queue duration:** `{self.format_song_length(song_queue_length_seconds)}`\n**Displaying page** `{page}/{len(song_queue_chunked)}`",
+                color=anemo_color
+            )
+
             if page < 1 or page > len(song_queue_chunked):
-                await ctx.respond("Invalid page number.")
+                queue_embed = discord.Embed(
+                    description="Invalid page number.",
+                    color=anemo_color
+                )
+                await ctx.respond(embed=queue_embed, delete_after=15)
             else:
-                queue_string = f"```diff\nType a number to show a specific page. For example, \"s!queue 2\" will show the second page.\nDisplaying page {page}/{len(song_queue_chunked)}\n"
                 for song in song_queue_chunked[page - 1]:
                     if first_track and page == 1:
-                        queue_string += f"-> {self.song_queue.index(song) + 1}. {song} - ({self.format_song_length(song.length)}) (current track)\n"
+                        queue_embed.add_field(name="", value=f"**{self.song_queue.index(song) + 1}.** {song} - **({self.format_song_length(song.length)})** **(CURRENT TRACK)**\n", inline=False)
                         first_track = False
                     else:
-                        queue_string += f"   {self.song_queue.index(song) + 1}. {song} - ({self.format_song_length(song.length)})\n"
-                queue_string += "```"
-                await ctx.respond(queue_string)
+                        queue_embed.add_field(name="", value=f"**{self.song_queue.index(song) + 1}.** {song} - **({self.format_song_length(song.length)})**\n", inline=False)
+                await ctx.respond(embed=queue_embed, delete_after=30)
 
     @bot.bridge_command(aliases=["huffle", "mix", "randomize"])
     async def shuffle(self, ctx):
         """Shuffles the queue."""
         vc = ctx.voice_client
         if not vc:
-            await ctx.respond("You must be in a voice channel to use this command.")
+            shuffle_embed = discord.Embed(
+                    description="You must be in a voice channel to use this command.",
+                    color=anemo_color
+                )
+            await ctx.respond(embed=shuffle_embed, delete_after=15)
         temp_queue = self.song_queue[1:]
         for _ in range(1, len(self.song_queue)):
             self.song_queue.pop()
         random.shuffle(temp_queue)
         self.song_queue += temp_queue
-        await ctx.respond("Shuffled the queue.")
+        shuffle_embed = discord.Embed(
+            description="Shuffled the queue.",
+            color=anemo_color
+        )
+        await ctx.respond(embed=shuffle_embed, delete_after=15)
 
     @bot.bridge_command(aliases=["nowplaying", "current", "info"])
     async def now_playing(self, ctx):
         """Gives information about the current track."""
         vc = ctx.voice_client
         if not vc:
-            await ctx.respond("You must be in a voice channel to use this command.")
-        info = f"```Song title: {self.song_queue[0]}\nLength: {self.format_song_length(self.song_queue[0].length)}```"
-        await ctx.respond(info)
+            now_playing_embed = discord.Embed(
+                    description="You must be in a voice channel to use this command.",
+                    color=anemo_color
+            )
+            await ctx.respond(embed=now_playing_embed, delete_after=15)
+        now_playing_embed = discord.Embed(
+            title="Now playing",
+            description=f"Song title: {self.song_queue[0]}\nLength: {self.format_song_length(self.song_queue[0].length)}",
+            color=anemo_color
+        )
+        # info = f"```Song title: {self.song_queue[0]}\nLength: {self.format_song_length(self.song_queue[0].length)}```"
+        await ctx.respond(embed=now_playing_embed, delete_after=15)
 
     @bot.bridge_command(aliases=["rem", "r", "rm"])
     async def remove(self, ctx, index: int):
         """Remove a track at the specified index."""
         vc = ctx.voice_client
         if not vc:
-            await ctx.respond("You must be in a voice channel to use this command.")
+            remove_embed = discord.Embed(
+                description="You must be in a voice channel to use this command.",
+                color=anemo_color
+            )
+            await ctx.respond(embed=remove_embed, delete_after=15)
         try:
             if index < 1:
-                await ctx.respond("Invalid index.")
-            if index == 1:
-                # removing the current track is equivalent to skipping it
-                await vc.pause()
-                await vc.resume()
-                await vc.play(self.song_queue[1], replace=True)
-                await ctx.respond(f"Removed `{self.song_queue[0]}` **`({self.format_song_length(self.song_queue[0].length)})`**. Now playing: `{self.song_queue[1]}` **`({self.format_song_length(self.song_queue[1].length)})`**")
+                remove_embed = discord.Embed(
+                    description="Invalid index.",
+                    color=anemo_color
+                )
+                await ctx.respond(embed=remove_embed, delete_after=15)
+            if index == 1: # removing the current track is equivalent to skipping it
+                if len(self.song_queue) == 1: # if queue has only one song, might as well stop the entire queue
+                    removed_track = self.song_queue.pop(index - 1)
+                    remove_embed = discord.Embed(
+                        description=f"Removed `{removed_track}` `({self.format_song_length(removed_track.length)})` from the queue.",
+                        color=anemo_color
+                    )
+                    await vc.stop()
+                    await ctx.respond(embed=remove_embed, delete_after=15)
+                else:
+                    await vc.pause()
+                    await vc.resume()
+                    await vc.play(self.song_queue[1], replace=True)
+                    remove_embed = discord.Embed(
+                        description=f"Removed `{self.song_queue[0]}` **`({self.format_song_length(self.song_queue[0].length)})`**. Now playing: `{self.song_queue[1]}` **`({self.format_song_length(self.song_queue[1].length)})`**",
+                        color=anemo_color
+                    )
+                    await ctx.respond(embed=remove_embed, delete_after=15)
             else:
                 removed_track = self.song_queue.pop(index - 1)
-                await ctx.respond(f"Removed {removed_track} ({self.format_song_length(removed_track.length)}) from the queue.")
+                remove_embed = discord.Embed(
+                    description=f"Removed `{removed_track}` `({self.format_song_length(removed_track.length)})` from the queue.",
+                    color=anemo_color
+                )
+                await ctx.respond(embed=remove_embed, delete_after=15)
         except Exception:
-            await ctx.respond("Invalid index.")
+            remove_embed = discord.Embed(
+                description="Invalid index.",
+                color=anemo_color
+            )
+            await ctx.respond(embed=remove_embed, delete_after=15)
 
 def setup(bot):
     bot.add_cog(Music(bot))
