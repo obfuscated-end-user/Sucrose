@@ -9,8 +9,26 @@ the song mentioned above
 anything by dots tokyo
 """
 
-sucrose_quotes = [
-    
+import discord
+
+ctx = discord.ext.bridge.context.BridgeApplicationContext
+
+sucrose_greetings = [
+    "Hello!",
+    "Nice to meet you!",
+    "Hi!",
+    "sup bro you good"
+]
+
+sucrose_random = [
+    # "Anemo test 6308!",
+    # "Adsorption test.",
+    # "死ね！",
+    f"{ctx.author.name} is a faggot!",
+    # "はじめまして、スクロースと申します。えっと。。。あたし、頑張る！",
+    # "wala kang tite",
+    # "putang ina mo",
+    f"tang ina mo {ctx.author.name}"
 ]
 
 sucrose_search_redirect = {

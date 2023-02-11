@@ -5,14 +5,14 @@ import random
 import time
 import wavelink
 from discord.ext import bridge, commands
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from sucrose import anemo_color
 from wavelink.ext import spotify
 
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 
-load_dotenv()
+# load_dotenv()
 bot = bridge.Bot()
 
 class Music(commands.Cog):

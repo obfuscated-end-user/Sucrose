@@ -40,7 +40,8 @@ async def on_connect():
 
 cogs_list = [
     "basic",
-    "music"
+    "music",
+    "other"
 ]
 
 for cog in cogs_list:
