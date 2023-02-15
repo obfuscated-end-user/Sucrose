@@ -5,14 +5,12 @@ import random
 import time
 import wavelink
 from discord.ext import bridge, commands
-# from dotenv import load_dotenv
 from sucrose import anemo_color
 from wavelink.ext import spotify
 
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 
-# load_dotenv()
 bot = bridge.Bot()
 
 class Music(commands.Cog):
@@ -82,9 +80,8 @@ class Music(commands.Cog):
             )
             await ctx.respond(embed=play_embed, delete_after=15)
 
-        # the idea is to check the search query for certain conditions when the user tries to play something. if it matches with one of the conditions, do something appropriate.
+        # the idea is to check the search query for certain conditions whenever the user tries to play something. if it matches with one of the conditions, do something appropriate.
         # YOUTUBE PLAYLIST OR YOUTUBE MUSIC PLAYLIST
-        # bootleg ass regex
         if "https://www.youtube.com/playlist?list=" in search or "https://music.youtube.com/playlist?list=" in search:
             youtube_playlist = await wavelink.YouTubePlaylist.search(query=search)
             play_embed = discord.Embed(
@@ -123,7 +120,7 @@ class Music(commands.Cog):
                 await ctx.respond(embed=play_embed, delete_after=15)
                 temp_playlist = []
         # SPOTIFY
-        elif "https://open.spotify.com/" in search:
+        elif "https://open.spotify.com" in search:
             # single track
             if "track" in search:
                 spotify_track = await spotify.SpotifyTrack.search(query=search, return_first=True)
@@ -232,7 +229,6 @@ class Music(commands.Cog):
             try:
                 song_length = self.format_song_length(self.song_queue[0].length)
                 await vc.pause()
-                # await vc.play(self.song_queue[0], replace=True)
                 skip_embed = discord.Embed(
                     description=f"Now playing the last song on the queue: `{self.song_queue[0]}` **`({song_length})`**",
                     color=anemo_color
@@ -252,7 +248,7 @@ class Music(commands.Cog):
             )
             await ctx.respond(embed=skip_embed, delete_after=15)
 
-    @bot.bridge_command(aliases=["top", "halt", "shutup", "stfu", "tigil", "hinto", "yamero", "やめろ"])
+    @bot.bridge_command(aliases=["top", "halt", "shutup", "stfu", "tigil", "hinto", "yamero", "やめろ", "damare", "だまれ"])
     async def stop(self, ctx):
         """Stops the current song. Stopped song cannot be resumed afterwards."""
         vc = ctx.voice_client
@@ -341,7 +337,7 @@ class Music(commands.Cog):
             song_queue_chunked  = [self.song_queue[i : i + song_queue_chunk_size] for i in range(0, len(self.song_queue), song_queue_chunk_size)]
             first_track = True # used for the "current track" thing in the queue
 
-            song_queue_length_seconds = 0 # the length of the whole playlist
+            song_queue_length_seconds = 0 # the length of the whole queue
             for song in self.song_queue:
                 song_queue_length_seconds += song.length
 
@@ -387,8 +383,8 @@ class Music(commands.Cog):
         )
         await ctx.respond(embed=shuffle_embed, delete_after=15)
 
-    @bot.bridge_command(aliases=["nowplaying", "current", "info"])
-    async def now_playing(self, ctx):
+    @bot.bridge_command(aliases=["now_playing", "current", "info"])
+    async def nowplaying(self, ctx):
         """Gives information about the current track."""
         vc = ctx.voice_client
         if not vc:
@@ -402,10 +398,9 @@ class Music(commands.Cog):
             description=f"Song title: {self.song_queue[0]}\nLength: {self.format_song_length(self.song_queue[0].length)}",
             color=anemo_color
         )
-        # info = f"```Song title: {self.song_queue[0]}\nLength: {self.format_song_length(self.song_queue[0].length)}```"
         await ctx.respond(embed=now_playing_embed, delete_after=15)
 
-    @bot.bridge_command(aliases=["rem", "r", "rm"])
+    @bot.bridge_command(aliases=["rem", "r", "rm", "pop"])
     async def remove(self, ctx, index: int):
         """Remove a track at the specified index."""
         vc = ctx.voice_client

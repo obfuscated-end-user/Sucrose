@@ -1,11 +1,9 @@
 # uses pycord
 import discord
 import random
-# from dotenv import load_dotenv
 from discord.ext import bridge, commands
 from sucrose import anemo_color
 
-# load_dotenv()
 bot = bridge.Bot()
 
 class Basic(commands.Cog):
