@@ -44,7 +44,24 @@ class Music(commands.Cog):
 
     @commands.Cog.listener()
     async def on_wavelink_track_start(self, player: wavelink.Player, track: wavelink.Track):
-        pass
+        # pass
+        # ctx = player.ctx
+        # player = ctx.voice_client
+        # channel = discord.Client.get_channel(self, player.channel)
+        # print(player.channel)
+        # print()
+        # print("on_wavelink_track_start", ctx)
+        # vc = ctx.voice_client
+        # TBD HOLY SHIT
+        channel = player.client.get_channel(channel_id)
+        if len(self.song_queue) < 1:
+            await channel.send("song queue has nothing")
+        elif len(self.song_queue) > 1:
+            play_embed = discord.Embed(
+                description=f"Now playing: `{self.song_queue[0].title}` **`({self.format_song_length(self.song_queue[0].length)})`**.",
+                color=anemo_color
+            )
+            await channel.send(embed=play_embed, delete_after=15)
 
     @commands.Cog.listener()
     async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track, reason):
@@ -70,6 +87,8 @@ class Music(commands.Cog):
     @bot.bridge_command(aliases=["p", "pl"])
     async def play(self, ctx, *, search: str):
         """Play a track or playlist."""
+        global channel_id
+        channel_id = ctx.channel.id
         vc = ctx.voice_client
         if not vc:
             vc = await ctx.author.voice.channel.connect(cls=wavelink.Player)

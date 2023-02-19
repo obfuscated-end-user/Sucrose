@@ -1,5 +1,5 @@
 # uses pycord
-# run from here, don't run the cogs
+# run from here, don't run the other files
 import discord
 import os
 from dotenv import load_dotenv
@@ -30,7 +30,7 @@ bot.help_command = Help()
 @bot.event
 async def on_ready():
     print(f"{bot.user.name} is ready and online!")
-    # change Sucrose's status. for now, it's currently impossible to have a status just like a normal user would. for bots, you need to set it as an activity (listening, playing, streaming, etc.).
+    # change this bot's status. for now, it's currently impossible to have a status just like a normal user would. for bots, you need to set it as an activity (listening, playing, streaming, etc.).
 
 @bot.event
 async def on_connect():

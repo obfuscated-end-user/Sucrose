@@ -25,8 +25,9 @@ class Basic(commands.Cog):
     @bot.bridge_command(aliases=["latency", "ms"])
     async def ping(self, ctx):
         """Sends the bot's latency, in milliseconds."""
+        print(ctx)
         ping_embed = discord.Embed(
-            description=f"Ping: {int(self.bot.latency * 1000)}ms",
+            description=f"{int(self.bot.latency * 1000)}ms",
             color=anemo_color
         )
         await ctx.respond(embed=ping_embed, delete_after=20)
