@@ -2,7 +2,7 @@
 import discord
 import random
 from discord.ext import bridge, commands
-from sucrose import anemo_color
+from sucrose import make_embed
 
 bot = bridge.Bot()
 
@@ -10,7 +10,6 @@ class Basic(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # REGULAR COMMANDS
     @bot.bridge_command()
     async def hello(self, ctx):
         """Sucrose greets you back."""
@@ -25,12 +24,7 @@ class Basic(commands.Cog):
     @bot.bridge_command(aliases=["latency", "ms"])
     async def ping(self, ctx):
         """Sends the bot's latency, in milliseconds."""
-        print(ctx)
-        ping_embed = discord.Embed(
-            description=f"{int(self.bot.latency * 1000)}ms",
-            color=anemo_color
-        )
-        await ctx.respond(embed=ping_embed, delete_after=20)
+        await ctx.respond(embed=make_embed(f"{int(self.bot.latency * 1000)}ms"), delete_after=20)
 
     @bot.bridge_command()
     async def sum(self, ctx, num1, num2):

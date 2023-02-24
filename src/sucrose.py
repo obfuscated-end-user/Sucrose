@@ -11,8 +11,6 @@ bot = bridge.Bot(intents=discord.Intents.all(), command_prefix="s!")
 TOKEN = os.getenv("SUCROSE_TOKEN")
 # TOKEN = os.getenv("TESTING_TOKEN")  # debug
 
-anemo_color = discord.Colour.from_rgb(84, 220, 179)
-
 # customizing help
 class Help(commands.MinimalHelpCommand):
     async def send_pages(self):
@@ -21,11 +19,16 @@ class Help(commands.MinimalHelpCommand):
         # for each page in this help command
         for page in self.paginator.pages:
             # make an embed
-            embed = discord.Embed(description=page, color=anemo_color)
+            embed = discord.Embed(description=page, color=discord.Colour.from_rgb(84, 220, 179))
             # and send the embed to the current destination
             await destination.send(embed=embed)
 # override the default help command
 bot.help_command = Help()
+
+def make_embed(text: str) -> discord.Embed:
+    """Returns an embed."""
+    # color value is the color of anemo
+    return discord.Embed(description=text, color=discord.Colour.from_rgb(84, 220, 179))
 
 @bot.event
 async def on_ready():
@@ -35,16 +38,17 @@ async def on_ready():
 @bot.event
 async def on_connect():
     print("Connected!")
-    await bot.change_presence(activity=discord.Game(name="God"), status=discord.Status.idle)
+    await bot.change_presence(activity=discord.Game(name="VALORANT"), status=discord.Status.dnd)
+    # await bot.change_presence(activity=discord.Streaming(name="VALORANT", url="https://code.visualstudio.com/docs/languages/dotnet", game="VALORANT"), status=discord.Status.dnd)
     # await bot.change_presence(status=discord.Status.offline)
 
-cogs_list = [
+cogs = [
     "basic",
     "music",
     "other"
 ]
 
-for cog in cogs_list:
+for cog in cogs:
     bot.load_extension(cog)
 
 bot.run(TOKEN)
