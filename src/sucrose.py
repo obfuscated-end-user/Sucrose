@@ -27,17 +27,17 @@ bot.help_command = Help()
 
 def make_embed(text: str) -> discord.Embed:
     """Returns an embed."""
-    # color value is the color of anemo
+    # anemo color
     return discord.Embed(description=text, color=discord.Colour.from_rgb(84, 220, 179))
 
 @bot.event
 async def on_ready():
     print(f"{bot.user.name} is ready and online!")
-    # change this bot's status. for now, it's currently impossible to have a status just like a normal user would. for bots, you need to set it as an activity (listening, playing, streaming, etc.).
 
 @bot.event
 async def on_connect():
     print("Connected!")
+    # change this bot's status. for now, it's currently impossible to have a status just like a normal user would. for bots, you need to set it as an activity (listening, playing, streaming, etc.).
     await bot.change_presence(activity=discord.Game(name="VALORANT"), status=discord.Status.dnd)
     # await bot.change_presence(activity=discord.Streaming(name="VALORANT", url="https://code.visualstudio.com/docs/languages/dotnet", game="VALORANT"), status=discord.Status.dnd)
     # await bot.change_presence(status=discord.Status.offline)
