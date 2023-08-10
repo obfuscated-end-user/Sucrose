@@ -2,11 +2,14 @@
 # run from here, don't run the other files
 import discord
 import os
+import random
+import sucrose_dict
+
 from dotenv import load_dotenv
-from discord.ext import commands, bridge
+from discord.ext import commands, bridge, tasks
 
 load_dotenv()
-bot = bridge.Bot(intents=discord.Intents.all(), command_prefix="s!")
+bot = bridge.Bot(intents=discord.Intents.all(), command_prefix="s!")    # main
 # bot = bridge.Bot(intents=discord.Intents.all(), command_prefix="d!")    # debug
 TOKEN = os.getenv("SUCROSE_TOKEN")
 # TOKEN = os.getenv("TESTING_TOKEN")  # debug
@@ -33,14 +36,21 @@ def make_embed(text: str) -> discord.Embed:
 @bot.event
 async def on_ready():
     print(f"{bot.user.name} is ready and online!")
+    change_status_task.start()
 
 @bot.event
 async def on_connect():
     print("Connected!")
+    # major bug: song queue is the same across all servers this bot has joined in, fix it by checking if the server id is the same as the caller or some wacky shit
+
+# change Sucrose's status every 1 minute
+@tasks.loop(seconds=10)
+async def change_status_task():
     # change this bot's status. for now, it's currently impossible to have a status just like a normal user would. for bots, you need to set it as an activity (listening, playing, streaming, etc.).
-    await bot.change_presence(activity=discord.Game(name="VALORANT"), status=discord.Status.dnd)
-    # await bot.change_presence(activity=discord.Streaming(name="VALORANT", url="https://code.visualstudio.com/docs/languages/dotnet", game="VALORANT"), status=discord.Status.dnd)
-    # await bot.change_presence(status=discord.Status.offline)
+    discord_statuses = [discord.Status.dnd, discord.Status.idle, discord.Status.online]
+    game_name = random.choice(sucrose_dict.activity_names)
+    discord_status = random.choice(discord_statuses)
+    await bot.change_presence(activity=discord.Game(name=game_name), status=discord_status)
 
 cogs = [
     "basic",
