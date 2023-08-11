@@ -61,4 +61,4 @@ cogs = [
 for cog in cogs:
     bot.load_extension(cog)
 
-bot.run(TOKEN)
+bot.run(TOKEN) # makes the bot work
