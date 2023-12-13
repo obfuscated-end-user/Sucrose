@@ -54,7 +54,8 @@ async def change_status_task():
 
 cogs = [
     "basic",
-    "music",
+    # music part of this bot currently doesn't work
+    # "music",
     "other"
 ]
 
