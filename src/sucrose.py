@@ -1,4 +1,7 @@
 # uses pycord
+# repo here: https://github.com/Pycord-Development/pycord
+# docs here: https://docs.pycord.dev/en/stable
+
 # run from here, don't run the other files
 import discord
 import os
@@ -54,9 +57,9 @@ async def change_status_task():
 
 cogs = [
     "basic",
-    # music part of this bot currently doesn't work
-    # "music",
-    "other"
+    # "music", # currently doesn't work, random updated module in pip fucked up the version i have installed in my machine, will fix later
+    "other",
+    "yt_bot"
 ]
 
 for cog in cogs:
