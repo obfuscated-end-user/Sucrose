@@ -13,6 +13,7 @@ yt_link_formats = [
     "http://y2u.be/",
 ]
 
+# sad to see 9Gj47G2e1Jc go
 unavailable = [
     "vMld3hM_n1c", "5WheryGqKb0", "aQIc8f5-zQY", "whsL8BdpVSQ", "icU8HSij1Z4", "V-lt-5Bqu90",
     "Jf_VnYfRKWc", "DmHx1LoD90k", "3YPmjRi3-n0", "KgRRb0vk0Gw", "yKHzXeno_ng", "QGzpkHqIwLk",
