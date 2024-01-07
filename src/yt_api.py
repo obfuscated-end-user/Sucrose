@@ -14,6 +14,7 @@
 # https://youtube.com/playlist?list=OLAK5uy_mUsMBsIavotUhSOoGSC-I0rzpXAhFAwv4 - does not start with "PL"
 
 import os
+import re
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 
@@ -40,11 +41,17 @@ def get_videos_from_playlist(youtube, items, playlist_id):
             response, pl_items_list_response
         )
 
+# (?:http|https|)(?::\/\/|)(?:www.|)(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/ytscreeningroom\?v=|\/feeds\/api\/videos\/|\/user\S*[^\w\-\s]|\S*[^\w\-\s]))([\w\-]{12,})[a-z0-9;:@#?&%=+\/\$_.-]*
+# [\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18}
+# only works with ids for the moment
 items = youtube.playlistItems()
-playlist = get_videos_from_playlist(youtube, items, "PLx5dM5qaGDFO-CujeLnLsZ9C4Jsu1gpcM")
-
-print("This might take a while...")
-for video_id in playlist:
-    with open(f"{dir_path}/yt_ids.txt", "a") as yt_id:
-        yt_id.write(f"\n{video_id}")
-print("Done!")
+input_playlist = input("Enter a playlist URL: ")
+print(re.match("([\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18})", input_playlist))
+while re.match("([\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18})", input_playlist) is not None:
+    playlist = get_videos_from_playlist(youtube, items, input_playlist)
+    print("This might take a while...")
+    for video_id in playlist:
+        with open(f"{dir_path}/yt_ids.txt", "a") as yt_id:
+            yt_id.write(f"\n{video_id}")
+    print("Done!")
+    input_playlist = input("Enter a playlist URL: ")

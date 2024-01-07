@@ -1,6 +1,7 @@
 import discord
 import random
 import os
+import time
 from discord.ext import bridge, commands
 from sucrose import make_embed
 
@@ -13,8 +14,9 @@ yt_link_formats = [
     "http://y2u.be/",
 ]
 
+# OBSOLETE
 # sad to see 9Gj47G2e1Jc go
-unavailable = [
+unavailable_obsolete = [
     "vMld3hM_n1c", "5WheryGqKb0", "aQIc8f5-zQY", "whsL8BdpVSQ", "icU8HSij1Z4", "V-lt-5Bqu90",
     "Jf_VnYfRKWc", "DmHx1LoD90k", "3YPmjRi3-n0", "KgRRb0vk0Gw", "yKHzXeno_ng", "QGzpkHqIwLk",
     "fo1qIzoXS94", "IsAmCwk8xhE", "XRGpLkMGDF8", "6krdDHGlgZk", "KTzyUhLriuA", "ElTPEMkkTmI",
@@ -31,49 +33,58 @@ unavailable = [
     "2IZAf9O7548", "1FHtIzLtlX8", "RnvIOzvn-iQ", "OVmZdExnsyI", "V3jsSMxKnXY", "-UQSzB6iwBg",
     "vz2SRI1mF1M", "OTQ2Z6gEa0Q", "9Gj47G2e1Jc", "CdrxzP-N1Y8", "tfmDF8PmUzk", "WHFWJ0T4zLk",
     "ksZW8mE1lug", "sLGnQiaCBfE", "3dqvHMFboak", "p_LMzX9cFqo", "nou8sehOU48", "cBRehsr_1h8",
+    "k-KAY_Glmn4", 
 ]
+
+start = time.time()
+with open(f"{dir_path}/yt_ids.txt", "r") as file:
+    yt_ids = [id for [id] in [line.strip().split("\n") for line in file.readlines()]]
+
+with open(f"{dir_path}/unavailable.txt", "r") as file:
+    unavailable = [id for [id] in [line.strip().split("\n") for line in file.readlines()]]
+
+for id in unavailable:
+    if id in yt_ids:
+        yt_ids.remove(id)
+end = time.time()
+print(f"Time taken to process the ID list: {end - start}")
 
 class Yt_Bot(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    """
+    if video generated not available:
+        if id already in unavailable.txt:
+            ignore
+        else:
+            add the id to unavailable.txt
+    """
+
     @bot.bridge_command(aliases=["ytlink", "ytl", "youtube", "randomvideo", "randvid"])
     async def yt(self, ctx: discord.ext.bridge.context.BridgeApplicationContext):
         """(NSFW WARNING) Returns a random YouTube link. May sometimes return deleted/privated videos."""
-        yt_vid_ids_file = open(f"{dir_path}/yt_ids.txt", "r")
-        yt_vid_ids_file_list = [id for [id] in [line.strip().split("\n") for line in yt_vid_ids_file.readlines()]]
-        yt_vid_ids_file.close()
-
-        for deleted_id in unavailable:
-            if deleted_id in yt_vid_ids_file_list:
-                yt_vid_ids_file_list.remove(deleted_id)
-
-        id = random.choice(yt_vid_ids_file_list)
+        start = time.time()
+        id = random.choice(yt_ids)
         # link = random.choice(yt_link_formats) + id # DO NOT USE
         link = yt_link_formats[1] + id
         await ctx.respond(embed=make_embed(f"# ⚠️ POTENTIAL NSFW/NSFL WARNING! ⚠️\n* Sucrose can't control what YouTube IDs will be generated, much less the content inside it.\n* If the embed does not show up, the video may be deleted or was set to private. Unlisted videos are not affected.\n* Archive links before they get 404'd at the [Wayback Machine](https://archive.org/web)!\n* If the video is deleted/not available, you can try viewing it [here](https://web.archive.org/web/https://www.youtube.com/watch?v={id}).\n* Do take note that this only views the webpage as it was archived during that time, and video playback is not guaranteed to work."))
         await ctx.respond(link)
+        end = time.time()
+        print(f"Time taken by s!yt: {end - start}")
 
     @bot.bridge_command()
     async def ytdebug(self, ctx: discord.ext.bridge.context.BridgeApplicationContext):
         """debug yt command"""
-        yt_vid_ids_file = open(f"{dir_path}/yt_ids.txt", "r")
-        yt_vid_ids_file_list = [line.strip().split("\n") for line in yt_vid_ids_file.readlines()]
-        yt_vid_ids_file_list = [id for [id] in yt_vid_ids_file_list]
-        yt_vid_ids_file.close()
-
-        for deleted_id in unavailable:
-            if deleted_id in yt_vid_ids_file_list:
-                yt_vid_ids_file_list.remove(deleted_id)
+        start = time.time()
 
         random_links = []
         for _ in range(5):
-            random_links.append(random.choice(yt_link_formats) + random.choice(yt_vid_ids_file_list))
-        
-        # await ctx.respond(f"```⚠️ POTENTIAL NSFW/NSFL WARNING ⚠️\nSucrose can't control what YouTube IDs will be generated, much less the content inside it.\nIf the embed does not show up, the video may be deleted or was set to private. Unlisted videos are not affected.\nArchive links before it gets 404'd at https://archive.org/web```\n{link}\n```If the link is deleted/not available, you can try viewing it here:\nhttps://web.archive.org/web/https://www.youtube.com/watch?v={id}\nDo take note that this only views the webpage as it was archived during that time, and video playback is not guaranteed to work.```")
-        # ```⚠️ POTENTIAL NSFW/NSFL WARNING ⚠️\nSucrose can't control what YouTube IDs will be generated, much less the content inside it.\nIf the embed does not show up, the video may be deleted or was set to private. Unlisted videos are not affected.\nArchive links before it gets 404'd at https://archive.org/web```\n
+            random_links.append(random.choice(yt_link_formats) + random.choice(yt_ids))
 
         await ctx.respond(f"{random_links[0][-11:]} {random_links[1][-11:]} {random_links[2][-11:]} {random_links[3][-11:]} {random_links[4][-11:]}\n{random_links[0]}\n{random_links[1]}\n{random_links[2]}\n{random_links[3]}\n{random_links[4]}")
+        end = time.time()
+        print(f"Time taken by s!ytdebug: {end - start}")
 
 def setup(bot):
     bot.add_cog(Yt_Bot(bot))
