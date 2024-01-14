@@ -54,4 +54,4 @@ while re.match("([\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18})", input_playlist) is not N
         with open(f"{dir_path}/yt_ids.txt", "a") as yt_id:
             yt_id.write(f"\n{video_id}")
     print("Done!")
-    input_playlist = input("Enter a playlist URL: ")
+    input_playlist = input("Enter a playlist ID: ")

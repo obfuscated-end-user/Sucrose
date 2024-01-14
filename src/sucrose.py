@@ -1,6 +1,7 @@
 # uses pycord
 # repo here: https://github.com/Pycord-Development/pycord
 # docs here: https://docs.pycord.dev/en/stable
+# remember to add the copyright copypasta bullshit that all published code on github must possess
 
 # run from here, don't run the other files
 import discord
@@ -46,7 +47,7 @@ async def on_connect():
     print("Connected!")
     # major bug: song queue is the same across all servers this bot has joined in, fix it by checking if the server id is the same as the caller or some wacky shit
 
-# change Sucrose's status every 1 minute
+# change Sucrose's status on specified interval
 @tasks.loop(seconds=10)
 async def change_status_task():
     # change this bot's status. for now, it's currently impossible to have a status just like a normal user would. for bots, you need to set it as an activity (listening, playing, streaming, etc.).
@@ -65,4 +66,5 @@ cogs = [
 for cog in cogs:
     bot.load_extension(cog)
 
-bot.run(TOKEN) # makes the bot work
+# makes the bot work
+bot.run(TOKEN)
