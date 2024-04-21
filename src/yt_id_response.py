@@ -23,3 +23,8 @@ for item in batch:
     if is_id_available(item):
         with open(f"{dir_path}/unavailable.txt", "a") as file:
             file.write(f"\n{item}")
+
+
+# some important links
+# https://stackoverflow.com/questions/74275924/why-do-i-get-a-chunkedencodingerror-in-python-when-using-requests-module
+# https://stackoverflow.com/questions/70189517/requests-chunkedencodingerror-with-requests-get-but-not-when-using-postman

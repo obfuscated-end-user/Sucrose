@@ -29,29 +29,43 @@ YOUTUBE_API_VERSION = "v3"
 youtube = build("youtube", "v3", developerKey=DEVELOPER_KEY)
 
 def get_videos_from_playlist(youtube, items, playlist_id):
-    response = items.list(part="snippet", playlistId=playlist_id)
-    while response:
-        pl_items_list_response = response.execute()
+    try:
+        print("This might take a while...")
+        response = items.list(part="snippet", playlistId=playlist_id)
+        while response:
+            pl_items_list_response = response.execute()
 
-        for pl_item in pl_items_list_response["items"]:
-            video_id = pl_item["snippet"]["resourceId"]["videoId"]
-            yield video_id
+            for pl_item in pl_items_list_response["items"]:
+                video_id = pl_item["snippet"]["resourceId"]["videoId"]
+                yield video_id
 
-        response = youtube.playlistItems().list_next(
-            response, pl_items_list_response
-        )
+            response = youtube.playlistItems().list_next(
+                response, pl_items_list_response
+            )
+        print("Done!")
+    except Exception as e:
+        print("Some weird shit happened.")
+        print(f"DETAILS:\n{e}")
 
 # (?:http|https|)(?::\/\/|)(?:www.|)(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/ytscreeningroom\?v=|\/feeds\/api\/videos\/|\/user\S*[^\w\-\s]|\S*[^\w\-\s]))([\w\-]{12,})[a-z0-9;:@#?&%=+\/\$_.-]*
 # [\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18}
+# ([\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18})
 # only works with ids for the moment
-items = youtube.playlistItems()
-input_playlist = input("Enter a playlist URL: ")
-print(re.match("([\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18})", input_playlist))
-while re.match("([\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18})", input_playlist) is not None:
-    playlist = get_videos_from_playlist(youtube, items, input_playlist)
-    print("This might take a while...")
-    for video_id in playlist:
-        with open(f"{dir_path}/yt_ids.txt", "a") as yt_id:
-            yt_id.write(f"\n{video_id}")
-    print("Done!")
-    input_playlist = input("Enter a playlist ID: ")
+# https://www.youtube.com/playlist?list=PLylTVsqZiRXOlDr8PemE5hUTVMGZrLD7G
+# (?:(?<=[https://])|(?<=[www.youtube.com])|(?<=[playlist])|(?<=[?list])|(?<=[=]))([\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18})
+try:
+    items = youtube.playlistItems()
+    # stupid fucking solution
+    input_playlist = input("Enter a playlist ID: ").strip("https://www.youtube.com/playlist?list=")
+    playlist_url_regex = "([\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18})"
+    match = re.match(playlist_url_regex, input_playlist)
+    print(f"{match}")
+    while match is not None:
+        playlist = get_videos_from_playlist(youtube, items, input_playlist)
+        for video_id in playlist:
+            with open(f"{dir_path}/yt_ids.txt", "a") as yt_id:
+                yt_id.write(f"\n{video_id}")
+        input_playlist = input("Enter a playlist ID: ")
+except Exception as e:
+    print("Some weird shit happened.")
+    print(f"DETAILS:\n{e}")
