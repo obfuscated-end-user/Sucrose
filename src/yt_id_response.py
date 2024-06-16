@@ -24,6 +24,11 @@ for item in batch:
         with open(f"{dir_path}/unavailable.txt", "a") as file:
             file.write(f"\n{item}")
 
+"""
+logs 
+id #s - YYYY/MM/DD 
+41135 - 2024/04/22
+"""
 
 # some important links
 # https://stackoverflow.com/questions/74275924/why-do-i-get-a-chunkedencodingerror-in-python-when-using-requests-module

@@ -1,9 +1,14 @@
 import discord
+import numpy as np
 import random
+import requests
 import os
 import time
+
+from bs4 import BeautifulSoup
 from discord.ext import bridge, commands
 from sucrose import make_embed
+# from sys import getsizeof
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 bot = bridge.Bot()
@@ -16,6 +21,7 @@ yt_link_formats = [
 
 # OBSOLETE
 # sad to see 9Gj47G2e1Jc go
+# https://web.archive.org/web/20181228183353/https://www.youtube.com/watch?v=9Gj47G2e1Jc
 unavailable_obsolete = [
     "vMld3hM_n1c", "5WheryGqKb0", "aQIc8f5-zQY", "whsL8BdpVSQ", "icU8HSij1Z4", "V-lt-5Bqu90",
     "Jf_VnYfRKWc", "DmHx1LoD90k", "3YPmjRi3-n0", "KgRRb0vk0Gw", "yKHzXeno_ng", "QGzpkHqIwLk",
@@ -46,6 +52,10 @@ with open(f"{dir_path}/unavailable.txt", "r") as file:
 for id in unavailable:
     if id in yt_ids:
         yt_ids.remove(id)
+
+yt_ids = np.array(yt_ids, dtype="O")
+np.random.shuffle(yt_ids)
+# print(getsizeof(yt_ids))
 end = time.time()
 print(f"Time taken to process the ID list: {end - start}")
 
@@ -68,7 +78,15 @@ class Yt_Bot(commands.Cog):
         id = random.choice(yt_ids)
         # link = random.choice(yt_link_formats) + id # DO NOT USE
         link = yt_link_formats[1] + id
-        await ctx.respond(embed=make_embed(f"# ⚠️ POTENTIAL NSFW/NSFL WARNING! ⚠️\n* Sucrose can't control what YouTube IDs will be generated, much less the content inside it.\n* If the embed does not show up, the video may be deleted or was set to private. Unlisted videos are not affected.\n* Archive links before they get 404'd at the [Wayback Machine](https://archive.org/web)!\n* If the video is deleted/not available, you can try viewing it [here](https://web.archive.org/web/https://www.youtube.com/watch?v={id}).\n* Do take note that this only views the webpage as it was archived during that time, and video playback is not guaranteed to work."))
+        soup = BeautifulSoup(requests.get(link).text, "html.parser") # "lxml" doesn't work
+        view_count_temp = soup.select_one("meta[itemprop='interactionCount'][content]")["content"]
+        view_count = f"{int(view_count_temp):,}"
+        uploader = soup.select_one("link[itemprop='name'][content]")["content"].replace("*", "\*")
+        title = soup.find_all(name="title")[0].text.strip(" - YouTube").replace("*", "\*")
+        await ctx.respond(embed=make_embed(f"### ⚠️ POTENTIAL NSFW/NSFL WARNING! ⚠️\nIf the embed does not show up, the video may be deleted, or is set to private. Alternatively, you can try viewing it [here](https://web.archive.org/web/https://www.youtube.com/watch?v={id}).\n\nTitle: **{title}**\nUploader: **{uploader}**\nViews: **{view_count}**"))
+
+        # await ctx.respond(embed=make_embed(f"### ⚠️ POTENTIAL NSFW/NSFL WARNING! ⚠️\n* Sucrose can't control what YouTube IDs will be generated, much less the content inside it.\n* If the embed does not show up, the video may be deleted or was set to private. Unlisted videos are not affected.\n* Archive links before they get 404'd at the [Wayback Machine](https://archive.org/web)!\n* If the video is deleted/not available, you can try viewing it [here](https://web.archive.org/web/https://www.youtube.com/watch?v={id}).\n* Do take note that this only views the webpage as it was archived during that time, and video playback is not guaranteed to work.\n\nTitle: **{title}**\n Uploader: **{uploader}**\nViews: **{view_count}**"))
+        
         await ctx.respond(link)
         end = time.time()
         print(f"Time taken by s!yt: {end - start}")

@@ -37,7 +37,7 @@ class Music(commands.Cog):
             spotify_client=spotify.SpotifyClient(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET)
         )
 
-    # connects the node to your server when this bot goes online. important for the music shit.
+    # connects the node to your server when this bot goes online. important for the music stuff.
     @commands.Cog.listener()
     async def on_wavelink_node_ready(self, node: wavelink.Node):
         print(f"{node.identifier} is ready.")
@@ -51,7 +51,7 @@ class Music(commands.Cog):
         # print()
         # print("on_wavelink_track_start", ctx)
         # vc = ctx.voice_client
-        # TBD HOLY SHIT
+        # TBD
         channel = player.client.get_channel(channel_id)
         if len(self.song_queue) < 1:
             await channel.send("song queue has nothing")
@@ -78,7 +78,7 @@ class Music(commands.Cog):
                 pass
 
     # MUSIC RELATED COMMANDS
-    # have you ever seen a play command this long and fucking stupid?
+    # have you ever seen a play command this long?
     @bot.bridge_command(aliases=["p", "pl"])
     async def play(self, ctx, *, search: str):
         """Play a track or playlist."""
@@ -162,7 +162,7 @@ class Music(commands.Cog):
                 self.song_queue.append(song)
                 await ctx.respond(embed=make_embed(f"`{song.title}` added to the queue **`({self.format_song_length(song.length)})`**."), delete_after=15)
 
-    @bot.bridge_command(aliases=["next", "kip", "slip", "n", "s", "fuck_off"])
+    @bot.bridge_command(aliases=["next", "kip", "slip", "n", "s"])
     async def skip(self, ctx):
         """Skips current song and plays the next song in queue."""
         vc = ctx.voice_client
@@ -171,7 +171,7 @@ class Music(commands.Cog):
         if ctx.author.voice.channel.id != vc.channel.id:
             await ctx.respond(embed=make_embed("You must be in the same voice channel as the bot."), delete_after=15)
         if len(self.song_queue) > 1: # if there is at least 1 song in the queue
-            await vc.pause() # done for technical reasons. looks fucking stupid though.
+            await vc.pause() # done for technical reasons. looks stupid though.
             await vc.resume()
             await vc.play(self.song_queue[1], replace=True) # play it
             await ctx.respond(embed=make_embed(f"Skipped `{self.song_queue[0]}` **`({self.format_song_length(self.song_queue[0].length)})`**. Now playing: `{self.song_queue[1]}` **`({self.format_song_length(self.song_queue[1].length)})`**"), delete_after=15)
@@ -190,7 +190,7 @@ class Music(commands.Cog):
             await vc.stop()
             await ctx.respond(embed=make_embed("Queue is empty."), delete_after=15)
 
-    @bot.bridge_command(aliases=["top", "halt", "shutup", "stfu", "tigil", "hinto", "yamero", "やめろ", "damare", "だまれ"])
+    @bot.bridge_command(aliases=["top", "halt", "shutup"])
     async def stop(self, ctx):
         """Stops the current song. Stopped song cannot be resumed afterwards."""
         vc = ctx.voice_client

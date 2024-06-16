@@ -1,7 +1,7 @@
 # uses pycord
 # repo here: https://github.com/Pycord-Development/pycord
 # docs here: https://docs.pycord.dev/en/stable
-# remember to add the copyright copypasta bullshit that all published code on github must possess
+# remember to add the copyright copypasta that all published code on github must possess
 
 # run from here, don't run the other files
 import discord
@@ -45,7 +45,7 @@ async def on_ready():
 @bot.event
 async def on_connect():
     print("Connected!")
-    # major bug: song queue is the same across all servers this bot has joined in, fix it by checking if the server id is the same as the caller or some wacky shit
+    # major bug: song queue is the same across all servers this bot has joined in, fix it by checking if the server id is the same as the caller
 
 # change Sucrose's status on specified interval
 @tasks.loop(seconds=10)
@@ -58,7 +58,7 @@ async def change_status_task():
 
 cogs = [
     "basic",
-    # "music", # currently doesn't work, random updated module in pip fucked up the version i have installed in my machine, will fix later
+    # "music", # currently doesn't work, random updated module in pip messed up the version i have installed in my machine, will fix later
     "other",
     "yt_bot"
 ]
