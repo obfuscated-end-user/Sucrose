@@ -76,6 +76,7 @@ class Yt_Bot(commands.Cog):
         """(NSFW WARNING) Returns a random YouTube link. May sometimes return deleted/privated videos."""
         start = time.time()
         id = random.choice(yt_ids)
+        print(f"DEBUG: {id}")
         # link = random.choice(yt_link_formats) + id # DO NOT USE
         link = yt_link_formats[1] + id
         soup = BeautifulSoup(requests.get(link).text, "html.parser") # "lxml" doesn't work
