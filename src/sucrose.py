@@ -20,6 +20,8 @@ TOKEN = os.getenv("SUCROSE_TOKEN")
 
 # customizing help
 class Help(commands.MinimalHelpCommand):
+    # do something about this
+    @bot.bridge_command(aliases=["h"])
     async def send_pages(self):
         # the channel used to send this help command
         destination = self.get_destination()
@@ -58,7 +60,7 @@ async def change_status_task():
 
 cogs = [
     "basic",
-    # "music", # currently doesn't work, random updated module in pip messed up the version i have installed in my machine, will fix later
+    "music", # currently doesn't work, random updated module in pip messed up the version i have installed in my machine, will fix later
     "other",
     "yt_bot"
 ]
