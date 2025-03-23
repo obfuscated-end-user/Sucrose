@@ -19,17 +19,8 @@ def is_id_available(id):
     print(f"{batch.index(id) + 1}/{len(batch)}: \"https://youtu.be/{id}\" {response}")
     return bool(response)
 
+
 for item in batch:
     if is_id_available(item):
         with open(f"{dir_path}/unavailable.txt", "a") as file:
             file.write(f"\n{item}")
-
-"""
-logs 
-id #s - YYYY/MM/DD 
-41135 - 2024/04/22
-"""
-
-# some important links
-# https://stackoverflow.com/questions/74275924/why-do-i-get-a-chunkedencodingerror-in-python-when-using-requests-module
-# https://stackoverflow.com/questions/70189517/requests-chunkedencodingerror-with-requests-get-but-not-when-using-postman

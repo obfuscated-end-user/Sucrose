@@ -1,5 +1,7 @@
 import os
 import re
+from collections import defaultdict
+from collections import OrderedDict
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 
@@ -11,69 +13,60 @@ DEVELOPER_KEY = API_KEY
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
-youtube = build("youtube", "v3", developerKey=DEVELOPER_KEY)
+class bcolors:
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+
+yt_vid_ids_file = open(f"{dir_path}/yt_ids.txt", "r")
+yt_vid_ids_file_list = [line.strip().split("\n") for line in yt_vid_ids_file.readlines()]
+yt_vid_ids_file_list = [id for [id] in yt_vid_ids_file_list]
+yt_vid_ids_file.close()
+
+youtube = build("youtube", YOUTUBE_API_VERSION, developerKey=DEVELOPER_KEY)
 
 def get_videos_from_playlist(youtube, items, playlist_id):
     try:
-        print("This might take a while...")
+        print(f"{bcolors.WARNING}This might take a while...{bcolors.ENDC}")
         response = items.list(part="snippet", playlistId=playlist_id)
         while response:
             pl_items_list_response = response.execute()
-
             for pl_item in pl_items_list_response["items"]:
                 video_id = pl_item["snippet"]["resourceId"]["videoId"]
+                if video_id not in yt_vid_ids_file_list:
+                    print(f"{bcolors.OKGREEN}{video_id}{bcolors.ENDC} - {bcolors.UNDERLINE}{bcolors.OKBLUE}{pl_item['snippet']['title']}{bcolors.ENDC}")
+                else:
+                    print(f"{bcolors.OKGREEN}{video_id}{bcolors.ENDC} - {bcolors.UNDERLINE}{bcolors.HEADER}{pl_item['snippet']['title']}{bcolors.ENDC} {bcolors.FAIL}(DUPE){bcolors.ENDC}")
                 yield video_id
-
             response = youtube.playlistItems().list_next(
                 response, pl_items_list_response
             )
-        print("Done!")
+        print(f"{bcolors.WARNING}Done!{bcolors.ENDC}")
     except Exception as e:
-        print("12560129686")
         print(f"DETAILS:\n{e}")
 
-# (?:http|https|)(?::\/\/|)(?:www.|)(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/ytscreeningroom\?v=|\/feeds\/api\/videos\/|\/user\S*[^\w\-\s]|\S*[^\w\-\s]))([\w\-]{12,})[a-z0-9;:@#?&%=+\/\$_.-]*
-# [\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18}
-# ([\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18})
-# only works with ids for the moment
-# (?:(?<=[https://])|(?<=[www.youtube.com])|(?<=[playlist])|(?<=[?list])|(?<=[=]))([\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18})
 try:
     items = youtube.playlistItems()
-    # band-aid solution
-    input_playlist = input("Enter a playlist ID: ").strip("https://www.youtube.com/playlist?list=")
-    playlist_url_regex = "([\w\-_]{41}|[\w\-_]{34}|[\w\-_]{18})"
-    match = re.match(playlist_url_regex, input_playlist)
-    print(f"{match}")
+    input_playlist = input(f"{bcolors.HEADER}Enter a valid playlist URL or ID: {bcolors.ENDC}")
+    playlist_url_regex = "([\w-]{41}|[\w-]{34}|[\w-]{18})"
+    match = re.search(playlist_url_regex, input_playlist)
     while match is not None:
-        playlist = get_videos_from_playlist(youtube, items, input_playlist)
+        playlist = list(OrderedDict.fromkeys(get_videos_from_playlist(youtube, items, match.groups()[0])))
         for video_id in playlist:
-            with open(f"{dir_path}/yt_ids.txt", "a") as yt_id:
-                yt_id.write(f"\n{video_id}")
-        input_playlist = input("Enter a playlist ID: ")
+            if video_id not in yt_vid_ids_file_list:
+                with open(f"{dir_path}/yt_ids.txt", "a") as yt_id:
+                    yt_id.write(f"\n{video_id}")
+        yt_vid_ids_file = open(f"{dir_path}/yt_ids.txt", "r")
+        yt_vid_ids_file_list = [line.strip().split("\n") for line in yt_vid_ids_file.readlines()]
+        yt_vid_ids_file_list = [id for [id] in yt_vid_ids_file_list]
+        yt_vid_ids_file.close()
+        input_playlist = input(f"{bcolors.HEADER}Enter a valid playlist URL or ID: {bcolors.ENDC}")
+        match = re.search(playlist_url_regex, input_playlist)
 except Exception as e:
-    print("12560129686")
-    print(f"DETAILS:\n{e}")
-
-"""
-https://youtu.be/th5_9woFJmk
-https://youtu.be/coZbOM6E47I
-https://github.com/CoreyMSchafer/code_snippets/blob/master/Python/YouTube-API/02-Playlist-Duration/playlist.py
-
-example playlists
-https://youtube.com/playlist?list=PLmxT2pVYo5LB5EzTPZGfFN0c2GDiSXgQe
-https://youtube.com/playlist?list=PLx5dM5qaGDFO-CujeLnLsZ9C4Jsu1gpcM
-https://youtube.com/playlist?list=PLDXCaTsLZ6xga_ummU8HCdVQ5R2DuDXHS
-https://youtube.com/playlist?list=PLv3TTBr1W_9tppikBxAE_G6qjWdBljBHJ - LONG
-https://youtube.com/playlist?list=PLylTVsqZiRXOlDr8PemE5hUTVMGZrLD7G
-https://youtube.com/playlist?list=PL19E79A0638C8D449 - weird format
-https://youtube.com/playlist?list=PL69BE3BF7D0BB69C4
-https://youtube.com/playlist?list=OLAK5uy_mUsMBsIavotUhSOoGSC-I0rzpXAhFAwv4 - does not start with "PL"
-
-these work:
-https://www.youtube.com/playlist?list=PLKo9UD3uKyyEW8dG08lLLYBDbZGdtTQNQ
-
-but not these (\the ids themselves work):
-https://www.youtube.com/playlist?list=PL3KPNhFywXJe7DTrvp57mkM5Mw6Xaj1xZ
-https://www.youtube.com/playlist?list=PLSIxbPZbq9G475HSpPifjdLZO6kCXIGl-
-https://www.youtube.com/playlist?list=PLWKjhJtqVAbluXJKKbCIb4xd7fcRkpzoz
-"""
+    print(f"{bcolors.FAIL}DETAILS:\n{e}{bcolors.ENDC}")
