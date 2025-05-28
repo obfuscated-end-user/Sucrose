@@ -1,30 +1,86 @@
 import re
 
 pl_id_list = [
+    # NSFW/L WARNING
     "https://www.youtube.com/playlist?list=PLMXUGj9FrochduGNZ_pzvaSZfLM26euNs",
+    "https://www.youtube.com/playlist?list=PL68133AC2ED6ACD29",
+    "https://www.youtube.com/playlist?list=PLwwA42o2sq8iCPA5fxT43H4xiyZnDIE0j",
     "https://www.youtube.com/playlist?list=PL6dLhflRXzKJPJGaJZovXqfjtXszakH-W",
+    "https://www.youtube.com/playlist?list=PLPN7enis6gKntVWHJoA1JOssuYmQtVe7A",
     "https://www.youtube.com/playlist?list=PLAEbmFxcPciNUCG03fpi_sQ-XtPYuy0G_",
     "https://www.youtube.com/playlist?list=PLqYzJxUXOdUgGjMUgiJngx3UWH06coaLl",
     "https://www.youtube.com/watch?v=l4QrqO-bKLs&list=PLMXUGj9FrochduGNZ_pzvaSZfLM26euNs",
     "https://www.youtube.com/playlist?list=PLxoHK1S7LhWSU230SAT7fDUsLiXCwaBMo",
+    "https://www.youtube.com/playlist?list=PLZ2_1jd6_RYG09gFGGnBtb8Q9iF2ypJMT",
     "https://www.youtube.com/playlist?list=PLZK-y6Qrw3qN-AVavawYyH-fezNmXRoXx",
+    "https://www.youtube.com/playlist?list=PLjtjVhWODQOKwunnpcMvWNOvCQ31LJfHV",
     "https://www.youtube.com/playlist?list=PLB88A2A0C911E18EF",
+    "https://www.youtube.com/playlist?list=PLs4vj6sfKSDbXfDm3zapFA5Y3tJJYJkfA",
     "https://www.youtube.com/playlist?list=PLC-7UzzHTRvUgjPL1i3KI-KaWAlZSfYQt",
     "https://www.youtube.com/playlist?list=PLXDG0TgiA_kVBTbPuy-YZocFWTSdNOykW",
     "https://www.youtube.com/playlist?list=PLVx6HpgGCDbGspTo7ECzjq6KykGXBmbVn",
     "https://www.youtube.com/playlist?list=PLjNlQ2vXx1xbt30X8TcUfNzw_akVISXEu",
     "https://www.youtube.com/playlist?list=PLyAn2Ml1WRpa6O6FXr2nioRlwy7CVqgwC",
+    "https://www.youtube.com/playlist?list=PLGn5hs4PghY8BvLyaKiTEYlogZE_KYbcn",
     "https://www.youtube.com/playlist?list=PLCVu_0ug01adtvdyZohCGSyu5Nr2237C2",
     "https://www.youtube.com/playlist?list=PLL2MvChfOyJom9X8TQkc0A_y39_YJjB5K",
+    "https://www.youtube.com/playlist?list=PLNNvTOkxKt_cZnSrIDoRkTkE9QzRf_1ha",
     "https://www.youtube.com/playlist?list=PLbAFXJC0J5GaVjPNNw_i-oLNKc7bVQcFk",
     "https://www.youtube.com/playlist?list=PLIigXhZ7nJMmbrhGGtloocqfCVYHfoJrU",
     "https://www.youtube.com/playlist?list=PLWewvbjz7T-cvngENAn6eL4rcNAWaU8Tm",
+    "https://www.youtube.com/playlist?list=PLTTQ9x1BU9HCrr9pvUrVXaiB7I6kXtJNQ",
     "https://www.youtube.com/playlist?list=PLgNjCSGFfYetqrZxlYiU8yWaBs-XMmdqg",
+    "https://www.youtube.com/playlist?list=PLM9_QQ4SLMvc5DmfAWc0-Pjl9gJWidvJ6",
     "https://www.youtube.com/playlist?list=PLZx6GB7keq3mPIm4N0flJMPQF66ft0FRL",
     "https://www.youtube.com/playlist?list=PL6LSbBVD-WXPrT9zlI5l0UcmnahqINNZr",
     "https://www.youtube.com/playlist?list=PLQ0SvZmJ_LqBb3pjwmcQf2jLbXvrHU-Q6",
+    "https://www.youtube.com/playlist?list=PLv4MUSllGVfsG9nimQlxaP58tcRfeKmht",
+    "https://www.youtube.com/playlist?list=PLzCxunOM5WFJ7sbHi_9Zwq2xOwtkYeZlx",
+    "https://www.youtube.com/playlist?list=FLVeDtNieDW2IOsT1341roEg",
+    "https://www.youtube.com/watch?v=MlnGYcMpxgU&list=RDGMEM_v2KDBP3d4f8uT-ilrs8fQ&start_radio=1", # this should not count
+    "https://www.youtube.com/watch?v=nwOb4G6--xc&list=PLC5E6E261A6B99CA7",
+    "https://www.youtube.com/playlist?list=PL8eYbILOozDlKsgJ3kGTYWTrTa5YCYz-5",
+    "https://www.youtube.com/playlist?list=PLOB6vZawiFvqEtqN_VIVNqaO7kC6x9Bno",
+    "https://www.youtube.com/watch?v=svsTKrdSd7s&list=PLbbvBMFUQUXu2cOMgBTJSlw2FFeURBKhq",
+    "https://www.youtube.com/watch?v=fyx_VkXOzzQ&list=PLAJjaT2FfVfBvg7CBbt3fTJxy-6vWAzrE",
+    "https://www.youtube.com/watch?v=iR_3Kd9dM_I&list=PLAFxtrxn934Wuez6xcl4n7K2jEM95rVML",
+    "https://www.youtube.com/watch?v=3OF9Ea-K0mo&list=PLgRwQjUDG5Ay8w9-JhfPp0UJSB2FVSozC",
+    "https://www.youtube.com/playlist?list=PL2satA_B-xnSAxmFXHgb1tsaVJ_Pfhrg2",
+    "https://www.youtube.com/playlist?list=PLRRhpHqhZg6Hzu2LsR3dIwNMw22VGnE86",
+    "https://www.youtube.com/watch?v=phoTmkFLCTA&list=PL-93MbduPhS1yXeVLGt_lpW3SSG8ud878",
+    "https://www.youtube.com/playlist?list=PLC4tMB-SFCcU0mkKa36S58CJCIJiMEdBO",
+    "https://www.youtube.com/watch?v=NBmovH4jFLk&list=PLfl9WQxH6Hy2pnaY3SeB62JE791ORPNXw",
+    "https://www.youtube.com/playlist?list=PLZMe0ntMYSxkwsVg-geWT1P37Vip8lPSK",
+    "https://www.youtube.com/playlist?list=PL7d2nxMbb1l-DVt_frFxWbC9Bx_agcFHp",
+    "https://www.youtube.com/playlist?list=PLOM0kS5Cg_zRvVpvaPVEKiW0btOLek5dH",
+    "https://www.youtube.com/playlist?list=PLJRskJ7LkdN6SoOu9j1818fM6v4ZzPLn6", # LONG
+    "https://www.youtube.com/watch?v=MCmQEQDSucA&list=PLE0B0F066CE854450",
+    "https://www.youtube.com/watch?v=W2k0zcAoYBE&list=PL1Fl_uSkV0xoxCPESuttqIzxnk8N3xyPJ",
+    "https://www.youtube.com/watch?v=EraHxd4612o&list=PLPLGnVH0MjgRD2J4eXNBNkv0AMMQGy38M",
+    "https://www.youtube.com/playlist?list=PLQ22L2HtGbDpfbcYohFyV5ipugwKyIqCf",
+    "https://www.youtube.com/playlist?list=PL62NgDR-ypbr2NtxVu8aooVvbE5OQHtSZ",
+    "https://www.youtube.com/playlist?list=PLbrfH4IX3LXowcP-W80PrvlHejqIev_ld",
+    "https://www.youtube.com/playlist?list=PLafK3VzNx7Y1_VGwWx23n3hfCM5bmyJDw",
+    "https://www.youtube.com/playlist?list=PLJFdms-8oUJ10IpX27KfgAEg6JYVuSZKQ",
+    "https://www.youtube.com/playlist?list=PL-Q7YOqgoVUWGybCTpevJE8Bjr_Aj0Lx_",
+    "https://www.youtube.com/playlist?list=PLWuU4uzlqHGwa8hnLJa54HuSD35kibVe-",
+    "https://www.youtube.com/playlist?list=PLk33vLrz0d_GfmtmnfMk67fATadJBwXL8",
+    "https://www.youtube.com/playlist?list=PLCAn8P_OH_w94bOAEHHPjG09ZR_bUR9M7",
+    "https://www.youtube.com/playlist?list=PLQFCAxxd9jVy6NbPef4yjMjHIBlfOnTcl",
+    "https://www.youtube.com/watch?v=YBupxLCQSj0&list=PLXi3stIHCxeD4HnURA964JxgoSntP79We",
+    "https://www.youtube.com/playlist?list=PLJbSdmR3ed9_WqAUfBfhFnR4fp1srFCrs",
+    "https://www.youtube.com/playlist?list=PLyTYeXE3PCqMsSvF8qJtI9geTfXsNosQH",
+    "https://www.youtube.com/playlist?list=PLUmFoce2bpLMUQRdYd5zns-GO7XqLpR00",
+    "https://www.youtube.com/playlist?list=PLCC56DEBFA716A014",
+    "https://www.youtube.com/playlist?list=PLQmVFdwvZgfXlb2RDXWV1NaPXgYPu786G", # LONG
+    "https://www.youtube.com/watch?v=93FlYCUY9Hg&list=PLCuohY0-nZqDlymLzIFOufbtj01IkYT6K",
+    "https://www.youtube.com/playlist?list=PLTRiYSmChAzKZ-_G11FZm-y9BcsOoVjVW",
+    "https://www.youtube.com/playlist?list=PLvGgdfKUco-8kgahbdBcuA_H9PCQOH8FV", # LONG
+    "https://www.youtube.com/playlist?list=PLdD_cPjv-nlfh27ESpSMMVhOo8pWJKNlF", # LONG
+    "https://www.youtube.com/playlist?list=PLQBeb8seiH7180LyLHnZyi3k5-Lw23yRp", # LONG
+    "https://www.youtube.com/playlist?list=PLmjuFlXLMCmc6LIU2pxmhSMwgMKCj7z9H", # LONG
 ]
 
 for id in pl_id_list:
-    match = re.search("([\w-]{41}|[\w-]{34}|[\w-]{18})", id).groups()[0]
+    match = re.search("([\w-]{41}|[\w-]{34}|[\w-]{28}|[\w-]{24}|[\w-]{18})", id).groups()[0]
     print(f"{id} ({len(id)}) - {match} ({len(match)})")

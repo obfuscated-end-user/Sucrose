@@ -169,15 +169,8 @@ fucking nightmare.txt
 meta.txt
 
 src/__pycache__
-src/add_id.py
-src/batch.txt
+src/ignore
 src/other.py
-src/pl_ids.txt
-src/random_yt_link.py
-src/run.bat
 src/sucrose_dict.py
 src/tempCodeRunnerFile.py
 src/test
-src/unavailable.txt
-src/yt_ids.txt
-src/yt_ids copy.txt

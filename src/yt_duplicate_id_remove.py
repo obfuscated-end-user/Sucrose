@@ -1,28 +1,30 @@
-import os
-from collections import defaultdict
+import ctypes
+import morefunc as m
+from random import shuffle
 from collections import OrderedDict
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
+ctypes.windll.kernel32.SetConsoleTitleW("Remove duplicate IDs")
+yt_ids_list = m.load_yt_id_file()
 
-yt_vid_ids_file = open(f"{dir_path}/yt_ids.txt", "r")
-yt_vid_ids_file_list = [line.strip().split("\n") for line in yt_vid_ids_file.readlines()]
-yt_vid_ids_file_list = [id for [id] in yt_vid_ids_file_list]
-yt_vid_ids_file.close()
+dupes = m.find_dupes(1)
 
-duplicates = defaultdict(list)
-for i, item in enumerate(yt_vid_ids_file_list):
-    duplicates[item].append(i + 1)
-duplicates = { key:value for key,value in duplicates.items() if len(value) > 1 }
+no_dupes = list(OrderedDict.fromkeys(yt_ids_list))
+no_dupes_sorted = sorted(no_dupes)
 
-for key, value in duplicates.items():
-    print(f"{key}: {value}")
+yt_ids_list_shuffle = yt_ids_list
+shuffle(yt_ids_list_shuffle)
 
-no_dupes = list(OrderedDict.fromkeys(yt_vid_ids_file_list))
-with open(f"{dir_path}/yt_ids.txt", "w") as f:
-    for id in no_dupes:
-        if id == no_dupes[-1]:
-            f.write(id)
-        else:
-            f.write(f"{id}\n")
+def add_ids(path, ids):
+    with open(path, "w") as f:
+        for id in ids:
+            if id == ids[-1]:
+                f.write(id)
+            else:
+                f.write(f"{id}\n")
 
-input("done! (press enter to exit) ")
+
+add_ids(f"{m.dir_path}/ignore/yt_ids.txt", no_dupes)
+add_ids(f"{m.dir_path}/ignore/yt_ids_sorted.txt", no_dupes_sorted)
+add_ids(f"{m.dir_path}/all_ids.txt", yt_ids_list_shuffle)
+
+input("Done! (press enter to exit) ")

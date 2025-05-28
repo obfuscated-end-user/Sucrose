@@ -19,12 +19,15 @@ class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.song_queue = []
-        self.bot.loop.create_task(self.connect_nodes())
+        # self.bot.loop.create_task(self.connect_nodes())
 
     async def connect_nodes(self):
         """Connect to our Lavalink nodes."""
         await self.bot.wait_until_ready() # wait until the bot is ready
 
+        # comment this out for the time being to stop it
+        # from spamming warnings
+        '''
         nodes = [
             wavelink.Node(
             identifier="Node1", # This identifier must be unique for all the nodes you are going to use
@@ -33,8 +36,9 @@ class Music(commands.Cog):
             password="aac6308"
             )
         ]
+        '''
 
-        await wavelink.Pool.connect(nodes=nodes, client=self.bot) # Connect our nodes
+        # await wavelink.Pool.connect(nodes=nodes, client=self.bot) # Connect our nodes
 
     @bot.bridge_command(aliases=["p", "pl"])
     async def play(self, ctx, *, search: str):

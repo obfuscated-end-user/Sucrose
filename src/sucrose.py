@@ -8,7 +8,6 @@ import discord
 import os
 import random
 import sucrose_dict
-
 from dotenv import load_dotenv
 from discord.ext import commands, bridge, tasks
 
@@ -34,20 +33,24 @@ class Help(commands.MinimalHelpCommand):
 # override the default help command
 bot.help_command = Help()
 
+
 def make_embed(text: str) -> discord.Embed:
     """Returns an embed."""
     # anemo color
     return discord.Embed(description=text, color=discord.Colour.from_rgb(84, 220, 179))
+
 
 @bot.event
 async def on_ready():
     print(f"{bot.user.name} is ready and online!")
     change_status_task.start()
 
+
 @bot.event
 async def on_connect():
     print("Connected!")
     # major bug: song queue is the same across all servers this bot has joined in, fix it by checking if the server id is the same as the caller
+
 
 # change Sucrose's status on specified interval
 @tasks.loop(seconds=10)
@@ -57,6 +60,7 @@ async def change_status_task():
     game_name = random.choice(sucrose_dict.activity_names)
     discord_status = random.choice(discord_statuses)
     await bot.change_presence(activity=discord.Game(name=game_name), status=discord_status)
+
 
 cogs = [
     "basic",

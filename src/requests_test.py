@@ -1,7 +1,6 @@
 import requests
 
 test123 = requests.get("https://www.youtube.com/watch?v=GtcSIucyoFI")
-
 s = requests.Session()
 
 def is_id_available(id):
