@@ -1,5 +1,7 @@
 import os
 import requests
+import socket
+import threading
 from collections import defaultdict
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -32,6 +34,54 @@ class bcolors:
     ENDC = "\033[0m"
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
+
+
+class SingleInstanceError(Exception):
+    pass
+
+class SingleInstance:
+    def __init__(self, port=86, host="127.0.0.1"):
+        self.port = port
+        self.host = host
+        if not self._check_if_first_instance():
+            raise SingleInstanceError("Another instance is already running.")
+        self._setup_server()
+
+
+    def _check_if_first_instance(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        try:
+            sock.connect((self.host, self.port))
+            sock.close()
+            return False    # already running
+        except (ConnectionRefusedError, socket.timeout):
+            return True     # no instance running
+    
+
+    def _setup_server(self):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.bind((self.host, self.port))
+        self.sock.listen(1)
+        self.running = True
+        self.thread = threading.Thread(target=self._listen)
+        self.thread.daemon = True
+        self.thread.start()
+
+    
+    def _listen(self):
+        while self.running:
+            try:
+                conn, addr = self.sock.accept()
+                conn.close()
+            except socket.timeout:
+                pass
+
+
+    def stop(self):
+        self.running = False
+        self.sock.close()
+        self.thread.join()
 
 
 def load_yt_id_file() -> list[str]:
