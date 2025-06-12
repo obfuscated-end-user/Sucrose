@@ -169,6 +169,7 @@ fucking nightmare.txt
 meta.txt
 
 src/__pycache__
+src/all_ids.txt
 src/ignore
 src/other.py
 src/sucrose_dict.py

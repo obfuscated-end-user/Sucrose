@@ -1,7 +1,9 @@
 import ctypes
-import morefunc as m
 import os
 import sys
+
+import morefunc as m
+
 from re import search
 from collections import OrderedDict
 from dotenv import load_dotenv

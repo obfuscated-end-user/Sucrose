@@ -2,12 +2,14 @@
 # repo here: https://github.com/Pycord-Development/pycord
 # docs here: https://docs.pycord.dev/en/stable
 # remember to add the copyright copypasta that all published code on github must possess
-
 # run from here, don't run the other files
-import discord
+
 import os
 import random
+
+import discord
 import sucrose_dict
+
 from dotenv import load_dotenv
 from discord.ext import commands, bridge, tasks
 
@@ -19,18 +21,11 @@ TOKEN = os.getenv("SUCROSE_TOKEN")
 
 # customizing help
 class Help(commands.MinimalHelpCommand):
-    # do something about this
-    @bot.bridge_command(aliases=["h"])
     async def send_pages(self):
-        # the channel used to send this help command
         destination = self.get_destination()
-        # for each page in this help command
         for page in self.paginator.pages:
-            # make an embed
-            embed = discord.Embed(description=page, color=discord.Colour.from_rgb(84, 220, 179))
-            # and send the embed to the current destination
-            await destination.send(embed=embed)
-# override the default help command
+            await destination.send(embed=make_embed(page))
+
 bot.help_command = Help()
 
 
@@ -64,7 +59,7 @@ async def change_status_task():
 
 cogs = [
     "basic",
-    "music", # currently doesn't work, random updated module in pip messed up the version i have installed in my machine, will fix later
+    "music",
     "other",
     "yt_bot"
 ]

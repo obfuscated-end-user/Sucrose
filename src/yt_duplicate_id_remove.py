@@ -1,8 +1,10 @@
 import ctypes
-import morefunc as m
 import sys
-from random import shuffle
+
+import morefunc as m
+
 from collections import OrderedDict
+from random import shuffle
 
 if __name__ == "__main__":
     try:

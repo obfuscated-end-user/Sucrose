@@ -1,9 +1,11 @@
 import asyncio
-import aiohttp
 import ctypes
-import morefunc as m
 import os
 import sys
+
+import aiohttp
+import morefunc as m
+
 from dotenv import load_dotenv
 from random import shuffle
 

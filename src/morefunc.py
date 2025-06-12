@@ -57,7 +57,7 @@ class SingleInstance:
             return False    # already running
         except (ConnectionRefusedError, socket.timeout):
             return True     # no instance running
-    
+
 
     def _setup_server(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -68,7 +68,7 @@ class SingleInstance:
         self.thread.daemon = True
         self.thread.start()
 
-    
+
     def _listen(self):
         while self.running:
             try:

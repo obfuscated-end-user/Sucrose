@@ -1,8 +1,10 @@
+import os
+import requests
+import time
+
 import discord
 import morefunc as m
-import requests
-import os
-import time
+
 from bs4 import BeautifulSoup
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -19,7 +21,7 @@ shuffle(yt_ids)
 yt_ids = yt_ids[:2000]
 end = time.time()
 print(f"Time taken to process the ID list: {end - start}\n")
-print(yt_ids, "\n")
+# print(yt_ids, "\n")
 
 class Yt_Bot(commands.Cog):
     def __init__(self, bot):
