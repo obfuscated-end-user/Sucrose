@@ -29,9 +29,22 @@ def is_id_available(id):
         print(check.text)
         return bool(response)
 
-print()
+""" print()
 print(is_id_available("98TyXNPdMRo"))
-input()
+input() """
+from bs4 import BeautifulSoup
+
+soup = BeautifulSoup(requests.get("https://open.spotify.com/track/3kYvQJmhbzXw7GhaB4xjs9").text, "html.parser")
+meta_tag = soup.find("meta", property="og:description")
+if meta_tag:
+    content = meta_tag.get("content").split(" · ")[1]
+    print(content)
+else:
+    print("Meta tag not found")
+""" title = soup.find("title").string
+units = title.split(" - song and lyrics by ")
+track_name = units[0]
+artist_name = units[-1].split(" | ")[0] """
 
 """
 deleted examples

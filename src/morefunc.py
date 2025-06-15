@@ -1,8 +1,12 @@
 import os
+import re
 import requests
 import socket
 import threading
+import time
+
 from collections import defaultdict
+from datetime import datetime
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 ERASE_ABOVE = "\033[1A\033[K" # https://en.wikipedia.org/wiki/ANSI_escape_code
@@ -21,7 +25,7 @@ yt_link_formats = [
 # HIJACK ID LIST. COMMENT LINE ON yt_bot.py TO DISABLE. FOR DEBUG PURPOSES!
 hj = [
     "YxFs1eAEwrU", "bdOGh2q4184", "zIghUDfX2RY", "zRQoBJ73WaY", "Pbkn21NNduc",
-    "KaeYczuhDqw", "hjUgEN9kM_U", "A-bCqqSgw1Y", "jNQXAC9IVRw"
+    "KaeYczuhDqw", "hjUgEN9kM_U", "A-bCqqSgw1Y", "jNQXAC9IVRw", "i8a3gjt_Ar0"
 ]
 
 class bcolors:
@@ -40,7 +44,7 @@ class SingleInstanceError(Exception):
     pass
 
 class SingleInstance:
-    def __init__(self, port=86, host="127.0.0.1"):
+    def __init__(self, port=86, host="127.0.0.1") -> None:
         self.port = port
         self.host = host
         if not self._check_if_first_instance():
@@ -48,7 +52,7 @@ class SingleInstance:
         self._setup_server()
 
 
-    def _check_if_first_instance(self):
+    def _check_if_first_instance(self) -> bool:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(1)
         try:
@@ -59,7 +63,7 @@ class SingleInstance:
             return True     # no instance running
 
 
-    def _setup_server(self):
+    def _setup_server(self) -> None:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.host, self.port))
         self.sock.listen(1)
@@ -69,7 +73,7 @@ class SingleInstance:
         self.thread.start()
 
 
-    def _listen(self):
+    def _listen(self) -> None:
         while self.running:
             try:
                 conn, addr = self.sock.accept()
@@ -78,7 +82,7 @@ class SingleInstance:
                 pass
 
 
-    def stop(self):
+    def stop(self) -> None:
         self.running = False
         self.sock.close()
         self.thread.join()
@@ -121,6 +125,25 @@ def find_dupes(mode: int) -> dict[str, list]:
     return duplicates
 
 
+def print_with_timestamp(text: str) -> None:
+    """Print text into the terminal with a timestamp."""
+    print(f"{bcolors.HEADER}{datetime.now().strftime(DATE_FORMAT)}{bcolors.ENDC} {text}")
+
+
+def format_duration(s: int) -> str:
+    """Formats an int duration in seconds into HH:MM:SS."""
+    # 3600s = 1hr
+    return time.strftime("%M:%S", time.gmtime(s)) if s < 3600 else time.strftime("%H:%M:%S", time.gmtime(s))
+
+
+def escape_markdown(text: str) -> str:
+    """Escape possible markdown syntax in a string. (UNFINISHED)"""
+    escape_chars = r"*`"
+    escaped_text = re.sub(f"[{escape_chars}]", r"\\\g<0>", text)
+    # escaped_text = sub("[*]", "\*", text)
+    return escaped_text
+
+
 if __name__ == "__main__":
     print("This file is only meant to be imported, not run directly.")
-    input("(press enter to exit) ")
+    input("(press Enter to exit) ")
