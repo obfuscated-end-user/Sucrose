@@ -9,7 +9,8 @@ import yt_dlp
 
 from bs4 import BeautifulSoup
 from discord.ext import bridge, commands
-from random import shuffle
+from morefunc import bcolors as c
+from random import randrange, shuffle, uniform
 from sucrose import make_embed
 
 class VoiceError(Exception):
@@ -48,7 +49,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         self.channel = ctx.channel
         self.data = data
 
-        # self.uploader = data.get("uploader")
+        self.uploader = data.get("uploader")
         # self.uploader_url = data.get("uploader_url")
         date = data.get("upload_date")
         # self.upload_date = date[6:8] + "." + date[4:6] + "." + date[0:4] if date else "unknown"
@@ -65,7 +66,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         # self.stream_url = data.get("url")
 
     def __str__(self):
-        return f"{m.bcolors.OKCYAN}{self.title}{m.bcolors.ENDC} - {m.bcolors.WARNING}({self.duration}){m.bcolors.ENDC}"
+        return f"{c.OKCYAN}{self.title}{c.ENDC} - {c.WARNING}({self.duration}){c.ENDC}"
 
 
     @classmethod
@@ -105,9 +106,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 raise VoiceError(f"Couldn't retrieve any playable videos from the playlist `{search}`")
             
             end = time.time()
-            m.print_with_timestamp(f"{m.bcolors.WARNING}Time taken to process create_sources(): {end - start}{m.bcolors.ENDC}")
+            m.print_with_timestamp(f"{c.WARNING}Time taken to process create_sources() (playlist): {end - start}{c.ENDC}")
 
-            print("CREATE SOURCES - PLAYLIST", source)
             return sources
 
         else:   # if user queries a single track
@@ -141,10 +141,9 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 info = processed_info
             
             end = time.time()
-            m.print_with_timestamp(f"{m.bcolors.WARNING}Time taken to process create_sources(): {end - start}{m.bcolors.ENDC}")
+            m.print_with_timestamp(f"{c.WARNING}Time taken to process create_sources() (single track): {end - start}{c.ENDC}")
 
             source = cls(ctx, discord.FFmpegPCMAudio(info["url"], **cls.FFMPEG_OPTIONS), data=info)
-            print("CREATE SOURCES - SINGLE TRACK", source)
 
             return source
 
@@ -158,6 +157,9 @@ class Music(commands.Cog):
         self.stop_track = None
         self.current_track = None
         self.looping = False
+        self.track_time_start = None
+        self.now_playing_time = None
+        self.pause_resume_time = None
 
 
     @bridge.bridge_command(aliases=["p", "push"])
@@ -174,10 +176,11 @@ class Music(commands.Cog):
         ### Not supported
         * Apple Music
         * Deezer
-        * MySpace
+        * Myspace
         * Spotify album and playlist links
         * Tidal
         """
+
         vc = ctx.voice_client
         if not ctx.author.voice or not ctx.author.voice.channel:
             return await ctx.respond(embed=make_embed("You need to be in a voice channel to play music."))
@@ -226,6 +229,7 @@ class Music(commands.Cog):
                     self.current_track = self.track_queue[0]
                     self.stop_track = source
                     vc.play(self.current_track, after=lambda e: self.bot.loop.create_task(self.play_next(ctx)))
+                    self.track_time_start = time.time()
                     await ctx.respond(embed=make_embed(
                         f"▶️ Now playing: **[{self.current_track.title}]({self.current_track.url})** "
                         f"**`({self.current_track.duration})`**."), delete_after=15)
@@ -243,9 +247,17 @@ class Music(commands.Cog):
                 ), delete_after=15)
 
         m.print_with_timestamp( # line feed, tab, track name, duration
-            f"{m.bcolors.OKBLUE}@{ctx.author.name}{m.bcolors.ENDC} in {m.bcolors.OKGREEN}{ctx.guild.name}{m.bcolors.ENDC} - PLAY"
+            f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - PLAY"
             f"\n\t{f'{chr(10)}{chr(9)}'.join(song.__str__() for song in self.track_queue)}"
         )
+
+
+    @play.error
+    async def play_error(self, ctx: discord.ext.bridge.context.BridgeApplicationContext, e):
+        if isinstance(e, commands.MissingRequiredArgument):
+            await ctx.respond(embed=make_embed("⚠️ Usage: `s!play keywords`."), delete_after=15)
+        else:
+            raise e
 
 
     async def play_next(self, ctx: discord.ext.bridge.context.BridgeApplicationContext) -> None:
@@ -254,10 +266,20 @@ class Music(commands.Cog):
         try:
             # looks stupid but it works
             if len(self.track_queue) > 0 and not vc.is_playing():
-                self.track_queue.pop(0)
-                self.current_track = self.track_queue[0]
-                vc.stop()
-                vc.play(self.current_track, after=lambda e: self.bot.loop.create_task(self.play_next(ctx)))
+                if self.looping:
+                    self.track_time_start = time.time()
+                    self.now_playing_time = None
+                    looped_track = await YTDLSource.create_sources(ctx, self.current_track.url, loop=self.bot.loop, get_playlist=False)
+                    vc.stop()
+                    vc.play(looped_track, after=lambda e: self.bot.loop.create_task(self.play_next(ctx)))
+                else:
+                    self.track_time_start = time.time()
+                    self.now_playing_time = None
+                    self.pause_resume_time = None
+                    self.track_queue.pop(0)
+                    self.current_track = self.track_queue[0]
+                    vc.stop()
+                    vc.play(self.current_track, after=lambda e: self.bot.loop.create_task(self.play_next(ctx)))
                 await ctx.respond(embed=make_embed(
                     f"▶️ Now playing: **[{self.current_track.title}]({self.current_track.url})** "
                     f"**`({self.current_track.duration})`**."), delete_after=15)
@@ -274,6 +296,7 @@ class Music(commands.Cog):
         If there is only one track left in the queue, stop playing the current track.
         You can't play back a skipped track, you need to queue it again.
         """
+        self.looping = False
         vc = ctx.voice_client
         if not ctx.author.voice or not ctx.author.voice.channel:
             await ctx.respond(embed=make_embed(
@@ -295,8 +318,9 @@ class Music(commands.Cog):
             return
 
         if len(self.track_queue) > 1:
+            # add an optional parameter to jump somewhere in the queue
             m.print_with_timestamp(
-                f"{m.bcolors.OKBLUE}@{ctx.author.name}{m.bcolors.ENDC} in {m.bcolors.OKGREEN}{ctx.guild.name}{m.bcolors.ENDC} - SKIP > 1"
+                f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - SKIP > 1"
                 f"\n\t{f'{chr(10)}{chr(9)}'.join(song.__str__() for song in self.track_queue)}"
             )
             skipped_track = self.track_queue[0]
@@ -309,7 +333,7 @@ class Music(commands.Cog):
                 f"**`({skipped_track.duration})`**."), delete_after=15)
         elif len(self.track_queue) == 1:
             m.print_with_timestamp(
-                f"{m.bcolors.OKBLUE}@{ctx.author.name}{m.bcolors.ENDC} in {m.bcolors.OKGREEN}{ctx.guild.name}{m.bcolors.ENDC} - SKIP == 1"
+                f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - SKIP == 1"
                 f"\n\t{f'{chr(10)}{chr(9)}'.join(song.__str__() for song in self.track_queue)}"
             )
             skipped_track = self.track_queue.pop()
@@ -318,13 +342,16 @@ class Music(commands.Cog):
             self.stop_track = None
             self.current_track = None
             self.looping = False
+            self.track_time_start = None
+            self.now_playing_time = None
+            self.pause_resume_time = None
             await ctx.respond(embed=make_embed(
                 f"⏭️ Skipped the last track: **[{skipped_track.title}]({skipped_track.url})** "
                 f"**`({skipped_track.duration})`**.\n"
                 "❌️ Queue is now empty."), delete_after=15)
         else:
             m.print_with_timestamp(
-                f"{m.bcolors.OKBLUE}@{ctx.author.name}{m.bcolors.ENDC} in {m.bcolors.OKGREEN}{ctx.guild.name}{m.bcolors.ENDC} - SKIP STOP"
+                f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - SKIP STOP"
                 f"\n\t{f'{chr(10)}{chr(9)}'.join(song.__str__() for song in self.track_queue)}"
             )
             vc.stop()
@@ -332,10 +359,13 @@ class Music(commands.Cog):
             self.stop_track = None
             self.current_track = None
             self.looping = False
+            self.track_time_start = None
+            self.now_playing_time = None
+            self.pause_resume_time = None
             await ctx.respond(embed=make_embed("❌️ Queue is now empty. Playback stopped."), delete_after=15)
 
         m.print_with_timestamp(
-            f"{m.bcolors.OKBLUE}@{ctx.author.name}{m.bcolors.ENDC} in {m.bcolors.OKGREEN}{ctx.guild.name}{m.bcolors.ENDC} - SKIP"
+            f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - SKIP"
             f"\n\t{f'{chr(10)}{chr(9)}'.join(song.__str__() for song in self.track_queue)}"
         )
 
@@ -362,10 +392,13 @@ class Music(commands.Cog):
             self.stop_track = None
             self.current_track = None
             self.looping = False
+            self.track_time_start = None
+            self.now_playing_time = None
+            self.pause_resume_time = None
             await vc.disconnect()
 
         m.print_with_timestamp(
-            f"{m.bcolors.OKBLUE}@{ctx.author.name}{m.bcolors.ENDC} in {m.bcolors.OKGREEN}{ctx.guild.name}{m.bcolors.ENDC} - STOP"
+            f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - STOP"
             f"\n\t{f'{chr(10)}{chr(9)}'.join(song.__str__() for song in self.track_queue)}"
         )
 
@@ -381,10 +414,11 @@ class Music(commands.Cog):
             return
         if vc.is_playing():
             vc.pause()
+            self.pause_resume_time = self.now_playing_time
             await ctx.respond(embed=make_embed(
                 f"⏸️ Paused **[{self.track_queue[0].title}]({self.track_queue[0].url})**. "
                 "Type `s!resume` to resume playback."), delete_after=15)
-        m.print_with_timestamp(f"{m.bcolors.OKBLUE}@{ctx.author.name}{m.bcolors.ENDC} in {m.bcolors.OKGREEN}{ctx.guild.name}{m.bcolors.ENDC} - PAUSE")
+        m.print_with_timestamp(f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - PAUSE")
 
 
     @bot.bridge_command(aliases=["res", "rs"])
@@ -393,12 +427,13 @@ class Music(commands.Cog):
         vc = ctx.voice_client
         if vc.is_paused():
             vc.resume()
+            self.now_playing_time = self.pause_resume_time
             await ctx.respond(embed=make_embed(
                 f"▶️ Resuming **[{self.track_queue[0].title}]({self.track_queue[0].url})**."), delete_after=15)
         else:
             await ctx.respond(embed=make_embed(
                 "You must be in the same voice channel as the bot to use this command."), delete_after=15)
-        m.print_with_timestamp(f"{m.bcolors.OKBLUE}@{ctx.author.name}{m.bcolors.ENDC} in {m.bcolors.OKGREEN}{ctx.guild.name}{m.bcolors.ENDC} - RESUME")
+        m.print_with_timestamp(f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - RESUME")
 
 
     @bot.bridge_command(aliases=["q", "pl", "list", "playlist"])
@@ -431,12 +466,13 @@ class Music(commands.Cog):
                     f"**Displaying page** `{page}/{len(tq_chunked)}`"),
                     color=discord.Colour.from_rgb(84, 220, 179)
                 )
+                queue_embed.set_author(name="Sucrose", icon_url=m.SUCROSE_IMAGE)
 
                 if page < 1 or page > len(tq_chunked):
                     await ctx.respond(embed=make_embed("Invalid page number."), delete_after=15)
                 else:
                     m.print_with_timestamp(
-                        f"{m.bcolors.OKBLUE}@{ctx.author.name}{m.bcolors.ENDC} in {m.bcolors.OKGREEN}{ctx.guild.name}{m.bcolors.ENDC} - QUEUE"
+                        f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - QUEUE"
                         f"\n\t{f'{chr(10)}{chr(9)}'.join(f'{chr(10)}{chr(9)}'.join(song.__str__() for song in chunk) for chunk in tq_chunked)}"
                     )
                     for track in tq_chunked[page - 1]:
@@ -455,7 +491,6 @@ class Music(commands.Cog):
             await ctx.respond(embed=make_embed("⚠️ Usage: `s!queue page_number`."), delete_after=15)
 
 
-
     @bot.bridge_command(aliases=["sf", "huffle", "mix", "randomize"])
     async def shuffle(self, ctx: discord.ext.bridge.context.BridgeApplicationContext) -> None:
         """Shuffles the queue."""
@@ -469,7 +504,7 @@ class Music(commands.Cog):
         self.track_queue += temp
         await ctx.respond(embed=make_embed("🔀 Shuffled the queue."), delete_after=15)
         m.print_with_timestamp(
-            f"{m.bcolors.OKBLUE}@{ctx.author.name}{m.bcolors.ENDC} in {m.bcolors.OKGREEN}{ctx.guild.name}{m.bcolors.ENDC} - SHUFFLE"
+            f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - SHUFFLE"
             f"\n\t{f'{chr(10)}{chr(9)}'.join(song.__str__() for song in self.track_queue)}"
         )
 
@@ -480,18 +515,45 @@ class Music(commands.Cog):
         vc = ctx.voice_client
         if not vc:
             await ctx.respond(embed=make_embed("❌ You must be in a voice channel to use this command."), delete_after=15)
+        if not vc.is_playing():
+            self.current_track = None
         if self.current_track:
+            elapsed = 0
+            self.now_playing_time = time.time()
+            if vc.is_paused():
+                elapsed = int(self.pause_resume_time - self.track_time_start)
+            else:
+                elapsed = int(self.now_playing_time - self.track_time_start)
+
+            progress_bar = f"<{m.format_duration(elapsed)}> {m.progress_bar(elapsed=elapsed, total=self.current_track.duration_sec, length=45)} <{self.current_track.duration}>"
+            random_bars = m.wave_chars(length=(len(progress_bar) + 1), cycles=randrange(1, 9), noise_level=uniform(0, 1))
+            fake_buttons = "⇌  ♡       ⏮  ⏸  ⏭     ≡  ⟲".center(len(progress_bar))
+
+            # truncate title and artist strings if they become too long
+            t = self.current_track.title
+            title = f"{t[:42]}...".center(len(progress_bar)) if len(t) > 45 else t.center(len(progress_bar))
+            a = self.current_track.uploader
+            artist = f"{a[:42]}...".center(len(progress_bar)) if len(a) > 45 else a.center(len(progress_bar))
+
             now_playing_embed = discord.Embed(
-                title="🎶 Now playing 🎶",
-                description=f"**[{self.current_track.title}]({self.current_track.url})**\n"
-                            f"**`{self.current_track.duration}`**",
+                description=
+                    f"# Now playing: \n"
+                    f"```{title}\n"
+                    f"{artist}\n\n"
+                    f"{random_bars}\n"
+                    f"{progress_bar}\n"
+                    f"{fake_buttons}```\n"
+                    f"**[source]({self.current_track.url})**",
                 color=discord.Colour.from_rgb(84, 220, 179)
             )
+            # now_playing_embed.set_thumbnail(url=self.current_track.thumbnail) # fixed position :(
+            now_playing_embed.set_footer(text="Buttons are non-functional.")
+            now_playing_embed.set_author(name="Sucrose", icon_url=m.SUCROSE_IMAGE)
             await ctx.respond(embed=now_playing_embed, delete_after=15)
         else:
-            await ctx.respond(embed=make_embed("❌ Nothing is playing right now."), delete_after=15)
+            await ctx.respond(embed=make_embed("❌ Nothing is playing right now."), delete_after=30)
         m.print_with_timestamp(
-            f"{m.bcolors.OKBLUE}@{ctx.author.name}{m.bcolors.ENDC} in {m.bcolors.OKGREEN}{ctx.guild.name}{m.bcolors.ENDC} - NOWPLAYING "
+            f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - NOWPLAYING "
             f"{self.current_track.__str__()}"
         )
 
@@ -512,6 +574,13 @@ class Music(commands.Cog):
                     if len(self.track_queue) == 1: # if queue has only one track, might as well stop the entire queue
                         removed_track = self.track_queue.pop(idx - 1)
                         vc.stop()
+                        self.track_queue.clear()
+                        self.stop_track = None
+                        self.current_track = None
+                        self.looping = False
+                        self.track_time_start = None
+                        self.now_playing_time = None
+                        self.pause_resume_time = None
                         await ctx.respond(embed=make_embed(
                             f"❌ Removed **[{removed_track.title}]({removed_track.url})** "
                             f"**`({removed_track.duration})`** from the queue."), delete_after=15)
@@ -533,7 +602,7 @@ class Music(commands.Cog):
             except Exception:
                 await ctx.respond(embed=make_embed("❌ Invalid index."), delete_after=15)
             m.print_with_timestamp(
-                f"{m.bcolors.OKBLUE}@{ctx.author.name}{m.bcolors.ENDC} in {m.bcolors.OKGREEN}{ctx.guild.name}{m.bcolors.ENDC} - REMOVE "
+                f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - REMOVE "
                 f"{idx}, {removed_track}"
             )
         except ValueError:
@@ -543,15 +612,24 @@ class Music(commands.Cog):
     @bot.bridge_command(aliases=["l", "lp"])
     async def loop(self, ctx: discord.ext.bridge.context.BridgeApplicationContext) -> None:
         """Loop the current track until this command is invoked again."""
-        await ctx.respond(embed=make_embed("❌ Track looping not available at the moment."), delete_after=15)
+        vc = ctx.voice_client
+        if not ctx.author.voice or not ctx.author.voice.channel:
+            await ctx.respond(embed=make_embed("You need to be in a voice channel to play music."))
+            return
+        
+        if not vc.is_playing():
+            await ctx.respond(embed=make_embed("❌ Nothing to loop at the moment."))
+            return
 
         if self.looping:
             self.looping = False
+            await ctx.respond(embed=make_embed(f"🔁 Stopped looping **[{self.current_track.title}]({self.current_track.url})**."), delete_after=15)
         else:
             self.looping = True
+            await ctx.respond(embed=make_embed(f"🔁 Looping **[{self.current_track.title}]({self.current_track.url})**."), delete_after=15)
 
         m.print_with_timestamp(
-            f"{m.bcolors.OKBLUE}@{ctx.author.name}{m.bcolors.ENDC} in {m.bcolors.OKGREEN}{ctx.guild.name}{m.bcolors.ENDC} - LOOP {self.looping}"
+            f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - LOOP {self.looping}"
         )
 
 

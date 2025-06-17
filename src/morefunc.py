@@ -1,4 +1,6 @@
+import math
 import os
+import random
 import re
 import requests
 import socket
@@ -9,8 +11,9 @@ from collections import defaultdict
 from datetime import datetime
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-ERASE_ABOVE = "\033[1A\033[K" # https://en.wikipedia.org/wiki/ANSI_escape_code
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+ERASE_ABOVE = "\033[1A\033[K" # https://en.wikipedia.org/wiki/ANSI_escape_code
+SUCROSE_IMAGE = "https://cdn.discordapp.com/app-icons/1066570861143916684/33cb92a765f567bbcfcd5bf3badf88c4.png"
 YT_VIDEO_ID_REGEX = "^([A-Za-z0-9_\-]{11})$"
 YT_PLAYLIST_ID_REGEX = "([\w-]{41}|[\w-]{34}|[\w-]{24}|[\w-]{18})"
 
@@ -44,7 +47,7 @@ class SingleInstanceError(Exception):
     pass
 
 class SingleInstance:
-    def __init__(self, port=86, host="127.0.0.1") -> None:
+    def __init__(self, port=86, host="127.0.0.1"):
         self.port = port
         self.host = host
         if not self._check_if_first_instance():
@@ -134,6 +137,42 @@ def format_duration(s: int) -> str:
     """Formats an int duration in seconds into HH:MM:SS."""
     # 3600s = 1hr
     return time.strftime("%M:%S", time.gmtime(s)) if s < 3600 else time.strftime("%H:%M:%S", time.gmtime(s))
+
+
+def progress_bar(elapsed: int, total: int, length: int=20) -> str:
+    """Generate a progress bar."""
+    # empty bar if duration unknown
+    # you can test this by inputting an ongoing youtube livestream link
+    if total < 1:
+        return "═" * length
+    filled_length = int(length * elapsed // total)
+    return "═" * filled_length + "🟢" + "═" * (length - filled_length - 1)
+
+
+def random_chars(chars: str="▁▂▃▄▅▆▇█", length: int=20) -> str:
+    """Generate random sequences of chars on a specified length."""
+    # .ıilI
+    return "".join(random.choice(list(chars)) for _ in range(length))
+
+
+def wave_chars(chars: str="▁▂▃▄▅▆▇█", length: int=20, cycles: float=1.0, noise_level: float=0.1) -> str:
+    """Generate sequences of chars in a way that it somewhat looks wavy. `chars` should be from low to high "frequency"."""
+    # ai my ass. my explanations are awful.
+    res = []
+    for i in range(length):
+        # https://en.wikipedia.org/wiki/Sine_and_cosine
+        # sine produces a range [-1, 1] (square brackets mean inclusive)
+        # python expects you to input sine angle in rad, which is covered by pi
+        # 2pi is a full circle in rad, multiplied by random noise
+        # multiplied by i for each point in the x-axis
+        # +1 and /2 are done to normalize it to [0, 1]
+        sine_val = (math.sin(2 * math.pi * cycles * i / length) + 1) / 2
+        # add random noise to sine wave while limiting it to a valid range
+        noisy_val = min(max(sine_val + random.uniform(-noise_level, noise_level), 0), 1)
+        # convert that to an int index
+        idx = int(noisy_val * (len(chars) - 1))
+        res.append(chars[idx])
+    return "".join(res)
 
 
 def escape_markdown(text: str) -> str:

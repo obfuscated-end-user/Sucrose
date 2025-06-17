@@ -1,9 +1,16 @@
-# uses pycord
-# repo here: https://github.com/Pycord-Development/pycord
-# docs here: https://docs.pycord.dev/en/stable
-# remember to add the copyright copypasta that all published code on github must possess
-# run from here, don't run the other files
+"""
+Sucrose discord bot.
 
+Uses Pycord.  
+repo: https://github.com/Pycord-Development/pycord  
+docs: https://docs.pycord.dev/en/stable
+
+Remember to add the copyright copypasta that all published code on GitHub must possess.  
+Run from here, don't run the other files.  
+"""
+
+import asyncio
+import ctypes
 import os
 import random
 
@@ -13,7 +20,10 @@ import sucrose_dict
 
 from dotenv import load_dotenv
 from discord.ext import commands, bridge, tasks
+from morefunc import bcolors as c
 
+ctypes.windll.kernel32.SetConsoleTitleW("Sucrose")
+asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 load_dotenv()
 bot = bridge.Bot(intents=discord.Intents.all(), command_prefix="s!")    # main
 # bot = bridge.Bot(intents=discord.Intents.all(), command_prefix="d!")    # debug
@@ -33,28 +43,30 @@ bot.help_command = Help()
 
 def make_embed(text: str) -> discord.Embed:
     """Returns an embed."""
-    return discord.Embed(description=text, color=discord.Colour.from_rgb(84, 220, 179)) # anemo color
+    embed = discord.Embed(description=text, color=discord.Colour.from_rgb(84, 220, 179)) # anemo color
+    embed.set_author(name="Sucrose", icon_url=m.SUCROSE_IMAGE)
+    return embed
 
 
 @bot.event
 async def on_ready() -> None:
-    m.print_with_timestamp(f"{m.bcolors.OKBLUE}{bot.user.name}{m.bcolors.ENDC} is ready and online!")
+    m.print_with_timestamp(f"{c.OKBLUE}{bot.user.name}{c.ENDC} is ready and online!")
     change_status_task.start()
 
 
 @bot.event
 async def on_connect() -> None:
-    m.print_with_timestamp(f"{m.bcolors.OKGREEN}Connected!{m.bcolors.ENDC}")
+    m.print_with_timestamp(f"{c.OKGREEN}Connected!{c.ENDC}")
     # major bug: song queue is the same across all servers this bot has joined in, fix it by checking if the server id is the same as the caller
 
 
 @bot.event
 async def on_disconnect() -> None:
-    m.print_with_timestamp(f"{m.bcolors.FAIL}Disonnected!{m.bcolors.ENDC}")
+    m.print_with_timestamp(f"{c.FAIL}Disonnected!{c.ENDC}")
 
 
 @bot.event
-async def on_application_command_error(ctx, error):
+async def on_application_command_error(ctx, error) -> None:
     if isinstance(error, commands.BadArgument):
         await ctx.respond(make_embed("❌ Invalid argument type provided."), ephemeral=True)
     else:
