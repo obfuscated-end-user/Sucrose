@@ -10,25 +10,35 @@ Run from here, don't run the other files.
 """
 
 import asyncio
-import ctypes
 import os
 import random
+import sys
 
 import discord
 import morefunc as m
 import sucrose_dict
 
-from dotenv import load_dotenv
 from discord.ext import commands, bridge, tasks
+from dotenv import load_dotenv
 from morefunc import bcolors as c
 
-ctypes.windll.kernel32.SetConsoleTitleW("Sucrose")
+
+if os.name == "nt":         # windows
+    import ctypes
+    ctypes.windll.kernel32.SetConsoleTitleW("Sucrose")
+elif os.name == "posix":    # linus torvalds
+    sys.stdout.write(f"\033]0;Sucrose\007")
+    sys.stdout.flush()
+
+
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 load_dotenv()
 bot = bridge.Bot(intents=discord.Intents.all(), command_prefix="s!")    # main
 # bot = bridge.Bot(intents=discord.Intents.all(), command_prefix="d!")    # debug
 TOKEN = os.getenv("SUCROSE_TOKEN")
 # TOKEN = os.getenv("TESTING_TOKEN")  # debug
+
+ANEMO_COLOR = discord.Colour.from_rgb(84, 220, 179)
 
 # customizing help
 # function docstrings are used for help info
@@ -43,7 +53,7 @@ bot.help_command = Help()
 
 def make_embed(text: str) -> discord.Embed:
     """Returns an embed."""
-    embed = discord.Embed(description=text, color=discord.Colour.from_rgb(84, 220, 179)) # anemo color
+    embed = discord.Embed(description=text, color=ANEMO_COLOR) # anemo color
     embed.set_author(name="Sucrose", icon_url=m.SUCROSE_IMAGE)
     return embed
 
@@ -86,7 +96,7 @@ async def change_status_task() -> None:
 cogs = [
     "basic",
     "music",
-    "other",
+    "other",    # remains elusive from public eyes
     "yt_bot"
 ]
 

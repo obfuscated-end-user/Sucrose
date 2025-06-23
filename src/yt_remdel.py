@@ -16,8 +16,8 @@ if __name__ == "__main__":
         load_dotenv()
         ctypes.windll.kernel32.SetConsoleTitleW("Check availability of IDs")
         ACCEPT_LANGUAGE = os.getenv("ACCEPT_LANGUAGE")
-        HEADERS = {"Accept-Language": ACCEPT_LANGUAGE}
-        RANGE = 700
+        HEADERS = {"Accept-Language": ACCEPT_LANGUAGE}        
+        RANGE = 2000 # change this variable if you get frequent timeouts
 
         yt_ids = m.load_yt_id_file()
         shuffle(yt_ids)
@@ -49,6 +49,7 @@ if __name__ == "__main__":
                     "This video isn't available anymore",
                     "This video has been removed by the uploader",
                     "This video has been removed for violating YouTube's Terms of Service",
+                    "This video has been removed for violating YouTube's Community Guidelines",
                     "This video is no longer available because the YouTube account associated with this video has been terminated.",
                     "This video is no longer available due to a copyright claim by a third party",
                 ]
@@ -60,12 +61,6 @@ if __name__ == "__main__":
                 tasks = [is_id_available(id, session) for id in yt_ids]
                 results = await asyncio.gather(*tasks)
 
-                # TEST
-                # print something i can easily see in the terminal
-                # print("SUPERMASSIVE BLACK HOLE", results, "\nDANI CALIFORNIA", yt_ids)
-                # appends false positives for some reason
-                # i suspect this has something to do with regions? idk mate leave it as is
-                # yt_ids = yt_ids[:RANGE] - maybe something on this line?
                 for id, is_deleted in zip(yt_ids, results):
                     if is_deleted:
                         print(f"{id} deleted")
@@ -74,18 +69,24 @@ if __name__ == "__main__":
         print("Please wait...")
         asyncio.run(main())
         regex = "("
+        links = ""
         if len(deleted_ids) <= 0:
             regex = "(none)"
+            links = "1. [luM6oeCM7Yw](https://youtu.be/dQw4w9WgXcQ)"
         elif len(deleted_ids) == 1:
             regex = f"({deleted_ids[0]})"
+            links = f"1. [{deleted_ids[0]}](https://youtu.be/{deleted_ids[0]})"
         else:
-            for id in deleted_ids:
+            for idx, id in enumerate(deleted_ids):
                 regex = regex + f"{id}\\n|"
+                links = links + f"{idx + 1}. [{id}](https://youtu.be/{id})  \n"
             regex = regex[:-1] + ")"
             print(regex)
 
-        with open(f"{m.dir_path}/ignore/del_id_regex.txt", "w") as f:
-            f.write(regex)
+        with open(f"{m.dir_path}/ignore/del_id_regex.md", "w") as f:
+            # use this for easy management
+            # https://addons.mozilla.org/en-US/firefox/addon/markdown-viewer-chrome
+            f.write(f"```{regex}```\n\n{links}")
 
         input("Done!")
 

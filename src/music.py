@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from discord.ext import bridge, commands
 from morefunc import bcolors as c
 from random import randrange, shuffle, uniform
-from sucrose import make_embed
+from sucrose import make_embed, ANEMO_COLOR
 
 class VoiceError(Exception):
     pass
@@ -464,7 +464,7 @@ class Music(commands.Cog):
                     f"**Track count:** `{len(self.track_queue)}`, **Total queue duration:** "
                     f"`{m.format_duration(tq_duration_sec)}`\n"
                     f"**Displaying page** `{page}/{len(tq_chunked)}`"),
-                    color=discord.Colour.from_rgb(84, 220, 179)
+                    color=ANEMO_COLOR
                 )
                 queue_embed.set_author(name="Sucrose", icon_url=m.SUCROSE_IMAGE)
 
@@ -530,6 +530,8 @@ class Music(commands.Cog):
             fake_buttons = "⇌  ♡       ⏮  ⏸  ⏭     ≡  ⟲".center(len(progress_bar))
 
             # truncate title and artist strings if they become too long
+            # don't expect this to center properly if the string contains fullwidth or
+            # CJK characters, e.g., Ｓ, す, ス, 糖, etc.
             t = self.current_track.title
             title = f"{t[:42]}...".center(len(progress_bar)) if len(t) > 45 else t.center(len(progress_bar))
             a = self.current_track.uploader
@@ -544,7 +546,7 @@ class Music(commands.Cog):
                     f"{progress_bar}\n"
                     f"{fake_buttons}```\n"
                     f"**[source]({self.current_track.url})**",
-                color=discord.Colour.from_rgb(84, 220, 179)
+                color=ANEMO_COLOR
             )
             # now_playing_embed.set_thumbnail(url=self.current_track.thumbnail) # fixed position :(
             now_playing_embed.set_footer(text="Buttons are non-functional.")

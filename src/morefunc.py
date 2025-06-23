@@ -9,11 +9,14 @@ import time
 
 from collections import defaultdict
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 ERASE_ABOVE = "\033[1A\033[K" # https://en.wikipedia.org/wiki/ANSI_escape_code
-SUCROSE_IMAGE = "https://cdn.discordapp.com/app-icons/1066570861143916684/33cb92a765f567bbcfcd5bf3badf88c4.png"
+SUCROSE_IMAGE = os.getenv("SUCROSE_IMAGE")
 YT_VIDEO_ID_REGEX = "^([A-Za-z0-9_\-]{11})$"
 YT_PLAYLIST_ID_REGEX = "([\w-]{41}|[\w-]{34}|[\w-]{24}|[\w-]{18})"
 
@@ -146,6 +149,7 @@ def progress_bar(elapsed: int, total: int, length: int=20) -> str:
     if total < 1:
         return "═" * length
     filled_length = int(length * elapsed // total)
+    # - 1 because of 🟢
     return "═" * filled_length + "🟢" + "═" * (length - filled_length - 1)
 
 

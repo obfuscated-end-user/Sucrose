@@ -1,4 +1,5 @@
 # uses pycord
+import aiohttp
 import random
 
 import discord
@@ -8,7 +9,7 @@ import requests
 from datetime import datetime
 from discord.ext import bridge, commands
 from morefunc import bcolors as c
-from sucrose import make_embed
+from sucrose import make_embed, ANEMO_COLOR
 
 bot = bridge.Bot()
 
@@ -32,14 +33,15 @@ class Basic(commands.Cog):
     @bot.bridge_command(aliases=["latency", "ms"])
     async def ping(self, ctx: discord.ext.bridge.context.BridgeApplicationContext) -> None:
         """Sends the bot's latency, in milliseconds."""
-        await ctx.respond(embed=make_embed(f"{int(self.bot.latency * 1000)}ms"), delete_after=20)
-        m.print_with_timestamp(f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - PING")
+        latency = f"{int(self.bot.latency * 1000)}ms"
+        await ctx.respond(embed=make_embed(latency), delete_after=20)
+        m.print_with_timestamp(f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - PING {latency}")
 
 
     @bot.bridge_command()
     async def sum(self, ctx: discord.ext.bridge.context.BridgeApplicationContext, num1: float, num2: float) -> None:
         """Adds two numbers together and says the result in the current channel."""
-        sum = float(num1) + float(num2)
+        sum = num1 + num2
         await ctx.respond(f"The sum of {num1} and {num2} is {sum}.")
         m.print_with_timestamp(f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - SUM")
 
@@ -76,6 +78,34 @@ class Basic(commands.Cog):
         """
         await ctx.send(f"\"{msg}\"", tts=True, delete_after=15)
         m.print_with_timestamp(f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - TTS - {msg}")
+
+
+    @bot.bridge_command(aliases=["xk"])
+    async def xkcd(self, ctx: discord.ext.bridge.context.BridgeApplicationContext) -> None:
+        """
+        Get random xkcd comic.
+        """
+        MAX_XKCD_COUNT = 3105
+        # because xkcd #404 actually returns a 404 page
+        id = random.choice([i for i in range(1, MAX_XKCD_COUNT) if i not in [404]])
+        # https://xkcd.com/json.html
+        url = f"https://xkcd.com/{id}/info.0.json"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status != 200:
+                    await ctx.respond(embed=make_embed("something happened lol"), delete_after=20)
+                    return
+                data = await resp.json()
+        embed = discord.Embed(
+            title=f"xkcd #{data['num']}: {data['title']}",
+            url=f"https://xkcd.com/{data['num']}",
+            description=data.get("alt", ""),
+            color=ANEMO_COLOR
+        )
+        embed.set_image(url=data["img"])
+        embed.set_footer(text="xkcd")
+        await ctx.respond(embed=embed, delete_after=60)
+        m.print_with_timestamp(f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - XKCD - {id}")
 
 
     @bot.bridge_command(aliases=["abt"])
