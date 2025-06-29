@@ -95,14 +95,22 @@ class SingleInstance:
 
 
 def load_yt_id_file() -> list[str]:
-	"""Return a list containing YouTube video IDs."""
+	"""
+	Return a list containing YouTube video IDs.
+	"""
 	with open(f"{dir_path}/ignore/yt_ids.txt", "r") as f:
 		yt_ids = [id for [id] in [l.strip().split("\n") for l in f.readlines()]]
 	return yt_ids
 
 
-def is_id_available(id, session: requests.Session, include_private=False) -> bool:
-	"""Check if ID is available. Returns True if ID is not available, False otherwise."""
+def is_id_available(
+	id: str,
+	session: requests.Session,
+	include_private: bool=False
+) -> bool:
+	"""
+	Check if ID is available. Returns True if ID is not available, False otherwise.
+	"""
 	check = session.get(f"https://youtu.be/{id}")
 	indicators = [
 		"Video unavailable",
@@ -117,7 +125,9 @@ def is_id_available(id, session: requests.Session, include_private=False) -> boo
 
 
 def find_dupes(mode: int) -> dict[str, list]:
-	"""Find duplicate YouTube video IDs."""
+	"""
+	Find duplicate YouTube video IDs.
+	"""
 	duplicates = defaultdict(list)
 	for i, item in enumerate(load_yt_id_file()):
 		if mode == 1:
@@ -132,18 +142,28 @@ def find_dupes(mode: int) -> dict[str, list]:
 
 
 def print_with_timestamp(text: str) -> None:
-	"""Print text into the terminal with a timestamp."""
+	"""
+	Print text into the terminal with a timestamp.
+	"""
 	print(f"{bcolors.HEADER}{datetime.now().strftime(DATE_FORMAT)}{bcolors.ENDC} {text}")
 
 
 def format_duration(s: int) -> str:
-	"""Formats an int duration in seconds into HH:MM:SS."""
+	"""
+	Formats an int duration in seconds into HH:MM:SS.
+	"""
 	# 3600s = 1hr
 	return time.strftime("%M:%S", time.gmtime(s)) if s < 3600 else time.strftime("%H:%M:%S", time.gmtime(s))
 
 
-def progress_bar(elapsed: int, total: int, length: int=20) -> str:
-	"""Generate a progress bar."""
+def progress_bar(
+	elapsed: int,
+	total: int,
+	length: int=20
+) -> str:
+	"""
+	Generate a progress bar.
+	"""
 	# empty bar if duration unknown
 	# you can test this by inputting an ongoing youtube livestream link
 	if total < 1:
@@ -153,14 +173,26 @@ def progress_bar(elapsed: int, total: int, length: int=20) -> str:
 	return "═" * filled_length + "🟢" + "═" * (length - filled_length - 1)
 
 
-def random_chars(chars: str="▁▂▃▄▅▆▇█", length: int=20) -> str:
-	"""Generate random sequences of chars on a specified length."""
+def random_chars(
+	chars: str="▁▂▃▄▅▆▇█",
+	length: int=20
+) -> str:
+	"""
+	Generate random sequences of chars on a specified length.
+	"""
 	# .ıilI
 	return "".join(random.choice(list(chars)) for _ in range(length))
 
 
-def wave_chars(chars: str="▁▂▃▄▅▆▇█", length: int=20, cycles: float=1.0, noise_level: float=0.1) -> str:
-	"""Generate sequences of chars in a way that it somewhat looks wavy. `chars` should be from low to high "frequency"."""
+def wave_chars(
+	chars: str="▁▂▃▄▅▆▇█",
+	length: int=20,
+	cycles: float=1.0,
+	noise_level: float=0.1
+) -> str:
+	"""
+	Generate sequences of chars in a way that it somewhat looks wavy. `chars` should be from low to high "frequency".
+	"""
 	# ai my ass. my explanations are awful.
 	res = []
 	for i in range(length):

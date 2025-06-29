@@ -13,23 +13,39 @@ if __name__ == "__main__":
 		yt_ids_list = m.load_yt_id_file()
 
 		def generate_url() -> str:
-			"""Generates a YouTube video link from the list of IDs."""
+			"""
+			Generates a YouTube video link from the list of IDs.
+			"""
 			return m.yt_link_formats[2] + choice(yt_ids_list)
 
 
-		def add_id(id) -> None:
-			"""Add an ID from the list of IDs."""
+		def add_id(id: str) -> None:
+			"""
+			Add an ID from the list of IDs.
+			"""
 			# It's up to you to find patterns in chaos.
 			if re.search(m.YT_VIDEO_ID_REGEX, id):
 				if (id not in yt_ids_list):
 					with open(f"{m.dir_path}/ignore/yt_ids.txt", "a") as file:
 						file.write(f"\n{id}")
 						yt_ids_list.append(id)
-						print(f"{m.bcolors.HEADER}{datetime.now().strftime(m.DATE_FORMAT)}{m.bcolors.ENDC} {m.bcolors.UNDERLINE}{m.bcolors.OKBLUE}{id}{m.bcolors.ENDC}{m.bcolors.OKGREEN} (#{yt_ids_list.index(id) + 1}) added.{m.bcolors.ENDC}")
+						print(
+							(f"{m.bcolors.HEADER}{datetime.now().strftime(m.DATE_FORMAT)}{m.bcolors.ENDC} "
+							f"{m.bcolors.UNDERLINE}{m.bcolors.OKBLUE}{id}{m.bcolors.ENDC}{m.bcolors.OKGREEN} "
+							f"(#{yt_ids_list.index(id) + 1}) added.{m.bcolors.ENDC}")
+						)
 				else:
-					print(f"{m.bcolors.HEADER}{datetime.now().strftime(m.DATE_FORMAT)}{m.bcolors.ENDC} {m.bcolors.UNDERLINE}{m.bcolors.OKBLUE}{id}{m.bcolors.ENDC}{m.bcolors.WARNING} already exists at line {yt_ids_list.index(id) + 1}.{m.bcolors.ENDC}")
+					print(
+						(f"{m.bcolors.HEADER}{datetime.now().strftime(m.DATE_FORMAT)}{m.bcolors.ENDC} "
+						f"{m.bcolors.UNDERLINE}{m.bcolors.OKBLUE}{id}{m.bcolors.ENDC}{m.bcolors.WARNING} already exists"
+						f" at line {yt_ids_list.index(id) + 1}.{m.bcolors.ENDC}")
+					)
 			else:
-				print(f"{m.bcolors.HEADER}{datetime.now().strftime(m.DATE_FORMAT)}{m.bcolors.ENDC} {m.bcolors.UNDERLINE}{m.bcolors.OKBLUE}{id}{m.bcolors.ENDC}{m.bcolors.FAIL} is not a valid YouTube ID.{m.bcolors.ENDC}")
+				print(
+					(f"{m.bcolors.HEADER}{datetime.now().strftime(m.DATE_FORMAT)}{m.bcolors.ENDC} "
+					f"{m.bcolors.UNDERLINE}{m.bcolors.OKBLUE}{id}{m.bcolors.ENDC}{m.bcolors.FAIL} "
+					f"is not a valid YouTube ID.{m.bcolors.ENDC}")
+				)
 
 
 		def id_exists(id: str):
@@ -45,16 +61,23 @@ if __name__ == "__main__":
 		continue_add = "y"
 		while continue_add != "n":
 			try:
-				input_id = yt_id_regex.search(input(f"{m.bcolors.OKCYAN}Enter a valid YouTube ID/link: {m.bcolors.ENDC}")).group(1)
-				
+				input_id = yt_id_regex.search(input(
+					f"{m.bcolors.OKCYAN}Enter a valid YouTube ID/link: {m.bcolors.ENDC}")
+				).group(1)
 				print(m.ERASE_ABOVE.strip(), end="")
 				while re.match(m.YT_VIDEO_ID_REGEX, input_id) is not None:
 					if not id_exists(input_id):
 						add_id(input_id)
-					input_id = yt_id_regex.search(input(f"{m.bcolors.OKCYAN}Enter a valid YouTube ID/link: {m.bcolors.ENDC}")).group(1)
+					input_id = yt_id_regex.search(input(
+						f"{m.bcolors.OKCYAN}Enter a valid YouTube ID/link: {m.bcolors.ENDC}")
+					).group(1)
 					print(m.ERASE_ABOVE.strip(), end="")
 			except:
-				continue_add = input(f"{m.bcolors.HEADER}{datetime.now().strftime(m.DATE_FORMAT)}{m.bcolors.ENDC} {m.bcolors.FAIL}Something wrong occurred. Type \"n\" to exit, anything else to continue: {m.bcolors.ENDC}").lower()
+				continue_add = input(
+					(f"{m.bcolors.HEADER}{datetime.now().strftime(m.DATE_FORMAT)}{m.bcolors.ENDC} "
+					f"{m.bcolors.FAIL}Something wrong occurred. Type \"n\" "
+					f"to exit, anything else to continue: {m.bcolors.ENDC}")
+				).lower()
 
 		instance.stop()
 	except m.SingleInstanceError:

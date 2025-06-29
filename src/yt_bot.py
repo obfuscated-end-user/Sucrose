@@ -30,13 +30,16 @@ class Yt_Bot(commands.Cog):
 
 
 	@bot.bridge_command(aliases=["rv", "ytlink", "ytl", "youtube", "randomvideo", "randvid"])
-	async def yt(self, ctx: discord.ext.bridge.context.BridgeApplicationContext) -> None:
+	async def yt(
+		self,
+		ctx: discord.ext.bridge.context.BridgeApplicationContext
+	) -> None:
 		"""
 		(NSFW WARNING) Returns a random YouTube link.
 		May sometimes return deleted/privated/region-locked videos.
 		"""
 		start = time.time()
-		await ctx.response.defer()
+		await ctx.defer()
 
 		user_id = ctx.author.id
 		now_user = time.time()
@@ -73,10 +76,14 @@ class Yt_Bot(commands.Cog):
 		time_diff = ", ".join(parts) + " ago" if parts else "today"
 
 		embed_string = (
-			f"If the embed does not show up, the video may be deleted or set to private. "
-			f"Alternatively, you can try viewing it [here](https://web.archive.org/web/https://www.youtube.com/watch?v={id}).\n"
-			f"Click [here](https://web.archive.org/save/https://www.youtube.com/shorts/{id}) to save a copy to the Wayback Machine."
-			f"\n\nTitle: **{title}**\nUploader: **{uploader}**\nDate uploaded: **{date_uploaded} ({time_diff})**\nViews: **{view_count}**"
+			"If the embed does not show up, the video "
+			"may be deleted or set to private. "
+			"Alternatively, you can try viewing it "
+			f"[here](https://web.archive.org/web/https://www.youtube.com/watch?v={id}).\n"
+			f"Click [here](https://web.archive.org/save/https://www.youtube.com/shorts/{id}) "
+			"to save a copy to the Wayback Machine."
+			f"\n\nTitle: **{title}**\nUploader: **{uploader}**\nDate uploaded: "
+			f"**{date_uploaded} ({time_diff})**\nViews: **{view_count}**"
 		)
 
 		# prevents sending the nsfw warning every invocation
@@ -89,29 +96,46 @@ class Yt_Bot(commands.Cog):
 		await ctx.respond(f"[link]({link})")
 		end = time.time()
 		m.print_with_timestamp(f"Time taken by s!yt: {end - start}")
-		m.print_with_timestamp(f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - YT - {id} {self.last_warning_time}")
+		m.print_with_timestamp(
+			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
+			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - YT - {id} {self.last_warning_time}"
+		)
 
 
 	@bot.bridge_command()
 	@commands.is_owner()
 	@commands.has_permissions(administrator=True)
-	async def ytdebug(self, ctx: discord.ext.bridge.context.BridgeApplicationContext) -> None:
-		"""Debug s!yt."""
+	async def ytdebug(
+		self,
+		ctx: discord.ext.bridge.context.BridgeApplicationContext
+	) -> None:
+		"""
+		Debug s!yt.
+		"""
 		start = time.time()
 
 		random_links = []
 		for _ in range(5):
 			random_links.append(choice(m.yt_link_formats) + choice(yt_ids))
 
-		await ctx.respond(f"{random_links[0][-11:]} {random_links[1][-11:]} {random_links[2][-11:]} {random_links[3][-11:]} {random_links[4][-11:]}\n{random_links[0]}\n{random_links[1]}\n{random_links[2]}\n{random_links[3]}\n{random_links[4]}")
+		await ctx.respond(
+			f"{random_links[0][-11:]} {random_links[1][-11:]} {random_links[2][-11:]} "
+			f"{random_links[3][-11:]} {random_links[4][-11:]}\n{random_links[0]}"
+			f"\n{random_links[1]}\n{random_links[2]}\n{random_links[3]}\n{random_links[4]}"
+		)
 		end = time.time()
 		m.print_with_timestamp(f"Time taken by s!ytdebug: {end - start}")
-		m.print_with_timestamp(f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in {c.OKGREEN}{ctx.guild.name}{c.ENDC} - YTDEBUG")
+		m.print_with_timestamp(
+			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
+			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - YTDEBUG"
+		)
 
 
 s = requests.Session()
 def get_id() -> str:
-	"""Get ID. This should not return an ID for a deleted/privated video."""
+	"""
+	Get ID. This should not return an ID for a deleted/privated video.
+	"""
 	id = choice(yt_ids)
 	m.print_with_timestamp(f"INIT: {id}")
 	id_availability = m.is_id_available(id, s, include_private=True)
