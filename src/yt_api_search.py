@@ -17,7 +17,11 @@ if __name__ == "__main__":
 		YOUTUBE_API_VERSION = "v3"
 
 		ctypes.windll.kernel32.SetConsoleTitleW("Search and immediately add IDs")
-		yt = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, developerKey=API_KEY)
+		yt = build(
+			YOUTUBE_API_SERVICE_NAME,
+			YOUTUBE_API_VERSION,
+			developerKey=API_KEY
+		)
 		yt_ids_list = m.load_yt_id_file()
 
 		def search_youtube(youtube, query, max_results=50):
@@ -38,9 +42,17 @@ if __name__ == "__main__":
 					if id not in yt_ids_list:
 						with open(f"{m.dir_path}/ignore/yt_ids.txt", "a") as yt_id:
 							yt_id.write(f"\n{id}")
-							print(f"{counter}. {m.bcolors.OKGREEN}{id}{m.bcolors.ENDC} - {m.bcolors.OKBLUE}{unescape(title)}{m.bcolors.ENDC}")
+							print(
+								f"{counter}. {m.bcolors.OKGREEN}{id}"
+								f"{m.bcolors.ENDC} - {m.bcolors.OKBLUE}"
+								f"{unescape(title)}{m.bcolors.ENDC}"
+							)
 					else:
-						print(f"{counter}. {m.bcolors.OKGREEN}{id}{m.bcolors.ENDC} - {m.bcolors.HEADER}{unescape(title)}{m.bcolors.ENDC}")
+						print(
+							f"{counter}. {m.bcolors.OKGREEN}{id}"
+							f"{m.bcolors.ENDC} - {m.bcolors.HEADER}"
+							f"{unescape(title)}{m.bcolors.ENDC}"
+						)
 					counter += 1
 
 			except Exception as e:
@@ -53,7 +65,10 @@ if __name__ == "__main__":
 				search_youtube(yt, search_query)
 				yt_ids_list = m.load_yt_id_file()
 			except Exception as e:
-				continue_add = input(f"{m.bcolors.FAIL}Something wrong occurred. Type \"n\" to exit, anything else to continue: {m.bcolors.ENDC}").lower()
+				continue_add = input(
+					f"{m.bcolors.FAIL}Something wrong occurred. Type \"n\" to "
+					f"exit, anything else to continue: {m.bcolors.ENDC}"
+				).lower()
 
 		instance.stop()
 	except m.SingleInstanceError:

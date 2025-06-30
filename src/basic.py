@@ -152,7 +152,10 @@ class Basic(commands.Cog):
 		async with aiohttp.ClientSession() as session:
 			async with session.get(url) as resp:
 				if resp.status != 200:
-					await ctx.respond(embed=make_embed("something happened lol"), delete_after=20)
+					await ctx.respond(
+						embed=make_embed("something happened lol"),
+						delete_after=20
+					)
 					return
 				data = await resp.json()
 		embed = discord.Embed(
@@ -197,7 +200,9 @@ class Basic(commands.Cog):
 		About Sucrose.
 		"""
 		await ctx.respond(embed=make_embed(
-			f"# Sucrose\nMade by obfuscated-end-user (横浜).\n\n© 2023-{datetime.now().strftime('%Y')}"),
+				f"# Sucrose\nMade by obfuscated-end-user (横浜).\n\n"
+				f"© 2023-{datetime.now().strftime('%Y')}"
+			),
 			delete_after=30
 		)
 		m.print_with_timestamp(

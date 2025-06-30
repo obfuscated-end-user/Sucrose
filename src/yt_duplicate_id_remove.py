@@ -37,5 +37,8 @@ if __name__ == "__main__":
 
 		instance.stop()
 	except m.SingleInstanceError:
-		print(f"Another instance is already running. {sys.argv[0].split(chr(92))[-1]}")
+		print(
+			f"Another instance is already running. "
+			f"{sys.argv[0].split(chr(92))[-1]}"
+		)
 		sys.exit(1)

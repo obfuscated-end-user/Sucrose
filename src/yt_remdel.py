@@ -26,7 +26,9 @@ if __name__ == "__main__":
 
 		# DO NOT USE (yet)
 		async def is_id_available(id: str, session: aiohttp.ClientSession):
-			"""Check if ID is available. Returns True if ID is not available, False otherwise."""
+			"""
+			Check if ID is available. Returns True if ID is not available, False otherwise.
+			"""
 			# check thumbnail availability
 			thumbnail_url = f"https://img.youtube.com/vi/{id}/default.jpg"
 			async with session.get(thumbnail_url, headers=HEADERS) as thumb_response:
@@ -92,5 +94,8 @@ if __name__ == "__main__":
 
 		instance.stop()
 	except m.SingleInstanceError:
-		print(f"Another instance is already running. {sys.argv[0].split(chr(92))[-1]}")
+		print(
+			f"Another instance is already running. "
+			f"{sys.argv[0].split(chr(92))[-1]}"
+		)
 		sys.exit(1)

@@ -809,8 +809,8 @@ class Music(commands.Cog):
 			fake_buttons = "⇌  ♡	   ⏮  ⏸  ⏭	 ≡  ⟲".center(len(progress_bar))
 
 			# truncate title and artist strings if they become too long
-			# don't expect this to center properly if the string contains fullwidth or
-			# CJK characters, e.g., Ｓ, す, ス, 糖, etc.
+			# don't expect this to center properly if the string contains
+			# fullwidth or CJK characters, e.g., Ｓ, す, ス, 糖, etc.
 			t = self.current_track.title
 			title = f"{t[:42]}...".center(len(progress_bar)) \
 				if len(t) > 45 else t.center(len(progress_bar))
@@ -829,7 +829,8 @@ class Music(commands.Cog):
 					f"**[source]({self.current_track.url})**",
 				color=ANEMO_COLOR
 			)
-			# now_playing_embed.set_thumbnail(url=self.current_track.thumbnail) # fixed position :(
+			# now_playing_embed.set_thumbnail(url=self.current_track.thumbnail)
+			# # fixed position :(
 			now_playing_embed.set_footer(text="Buttons are non-functional.")
 			now_playing_embed.set_author(name="Sucrose", icon_url=m.SUCROSE_IMAGE)
 			await ctx.respond(embed=now_playing_embed, delete_after=15)
@@ -861,7 +862,8 @@ class Music(commands.Cog):
 			if not vc:
 				await ctx.respond(
 					embed=make_embed(
-						"❌ You must be in a voice channel to use this command."),
+						"❌ You must be in a voice channel to use this command."
+					),
 					delete_after=15
 				)
 			try:
@@ -872,7 +874,8 @@ class Music(commands.Cog):
 					)
 				# removing the current track is equivalent to skipping it
 				if idx == 1:
-					# if queue has only one track, might as well stop the entire queue
+					# if queue has only one track, 
+					# might as well stop the entire queue
 					if len(self.track_queue) == 1:
 						removed_track = self.track_queue.pop(idx - 1)
 						vc.stop()
@@ -939,7 +942,9 @@ class Music(commands.Cog):
 		vc = ctx.voice_client
 		if not ctx.author.voice or not ctx.author.voice.channel:
 			await ctx.respond(
-				embed=make_embed("You need to be in a voice channel to play music.")
+				embed=make_embed(
+					"You need to be in a voice channel to play music."
+				)
 			)
 			return
 		

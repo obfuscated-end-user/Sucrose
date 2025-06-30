@@ -29,7 +29,9 @@ class Yt_Bot(commands.Cog):
 		self.last_warning_time = {}
 
 
-	@bot.bridge_command(aliases=["rv", "ytlink", "ytl", "youtube", "randomvideo", "randvid"])
+	@bot.bridge_command(
+		aliases=["rv", "ytlink", "ytl", "youtube", "randomvideo", "randvid"]
+	)
 	async def yt(
 		self,
 		ctx: discord.ext.bridge.context.BridgeApplicationContext
@@ -52,15 +54,19 @@ class Yt_Bot(commands.Cog):
 		# view_count_temp = soup.select_one("meta[itemprop='interactionCount'][content]")["content"]
 		# 2025/04/01 - from "interactionCount" to "userInteractionCount"
 		# 2025/05/15 - view_count_temp = soup.find("meta", attrs={"itemprop":"userInteractionCount"})["content"]
-		view_count_temp = soup.find_all("meta", attrs={"itemprop":"userInteractionCount"})[1]["content"]
+		view_count_temp = soup.find_all(
+			"meta", attrs={"itemprop":"userInteractionCount"})[1]["content"]
 		view_count = f"{int(view_count_temp):,}"
-		uploader = soup.select_one("link[itemprop='name'][content]")["content"].replace("*", "\*")
-		title = soup.find_all(name="title")[0].text.split(" - YouTube")[0].replace("*", "\*")
+		uploader = soup.select_one(
+			"link[itemprop='name'][content]")["content"].replace("*", "\*")
+		title = soup.find_all(
+			name="title")[0].text.split(" - YouTube")[0].replace("*", "\*")
 	
 		# the dates will depend on your time zone
 		# for example, all dates returned by soup are one day ahead
 		# this reflects the fact that i'm a day ahead from where youtube is from
-		date_uploaded = soup.find_all("meta", attrs={"itemprop":"uploadDate"})[0]["content"]
+		date_uploaded = soup.find_all(
+			"meta", attrs={"itemprop":"uploadDate"})[0]["content"]
 		date_obj = datetime.strptime(date_uploaded[:10], "%Y-%m-%d")
 		date_uploaded = f"{date_obj.day} {date_obj.strftime('%B %Y')}"
 
@@ -87,9 +93,13 @@ class Yt_Bot(commands.Cog):
 		)
 
 		# prevents sending the nsfw warning every invocation
-		if user_id not in self.last_warning_time or now_user - self.last_warning_time[user_id] > cooldown:
+		if user_id not in self.last_warning_time \
+			or now_user - self.last_warning_time[user_id] > cooldown:
 			self.last_warning_time[user_id] = now_user
-			await ctx.respond(embed=make_embed(f"### ⚠️ POTENTIAL NSFW/L WARNING!\n" + embed_string))
+			await ctx.respond(
+				embed=make_embed(f"### ⚠️ POTENTIAL NSFW/L WARNING!\n"
+					+ embed_string)
+				)
 		else:
 			await ctx.respond(embed=make_embed(embed_string))
 	
@@ -98,7 +108,8 @@ class Yt_Bot(commands.Cog):
 		m.print_with_timestamp(f"Time taken by s!yt: {end - start}")
 		m.print_with_timestamp(
 			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
-			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - YT - {id} {self.last_warning_time}"
+			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - YT - "
+			f"{id} {self.last_warning_time}"
 		)
 
 
@@ -119,9 +130,11 @@ class Yt_Bot(commands.Cog):
 			random_links.append(choice(m.yt_link_formats) + choice(yt_ids))
 
 		await ctx.respond(
-			f"{random_links[0][-11:]} {random_links[1][-11:]} {random_links[2][-11:]} "
+			f"{random_links[0][-11:]} {random_links[1][-11:]} "
+			f"{random_links[2][-11:]} "
 			f"{random_links[3][-11:]} {random_links[4][-11:]}\n{random_links[0]}"
-			f"\n{random_links[1]}\n{random_links[2]}\n{random_links[3]}\n{random_links[4]}"
+			f"\n{random_links[1]}\n{random_links[2]}"
+			f"\n{random_links[3]}\n{random_links[4]}"
 		)
 		end = time.time()
 		m.print_with_timestamp(f"Time taken by s!ytdebug: {end - start}")

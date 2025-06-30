@@ -19,7 +19,11 @@ if __name__ == "__main__":
 		YOUTUBE_API_VERSION = "v3"
 		OVERALL = 0
 
-		yt = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, developerKey=API_KEY)
+		yt = build(
+			YOUTUBE_API_SERVICE_NAME,
+			YOUTUBE_API_VERSION,
+			developerKey=API_KEY
+		)
 		dni = [] # do not include
 		yt_ids_list = m.load_yt_id_file()
 		ctypes.windll.kernel32.SetConsoleTitleW("Add YouTube video IDs by playlist IDs")
@@ -43,7 +47,11 @@ if __name__ == "__main__":
 				response2 = request.execute()
 
 				if "items" in response2 and len(response2["items"]) > 0:
-					print(f"TITLE: {m.bcolors.OKGREEN}{response2['items'][0]['snippet']['title']}{m.bcolors.ENDC}")
+					print(
+						f"TITLE: {m.bcolors.OKGREEN}"
+						f"{response2['items'][0]['snippet']['title']}"
+						f"{m.bcolors.ENDC}"
+					)
 
 				counter = 1
 				while response1:
@@ -52,17 +60,34 @@ if __name__ == "__main__":
 						vid_id = pl_item["snippet"]["resourceId"]["videoId"]
 						if vid_id not in yt_ids_list:
 							if pl_item["snippet"]["title"] == "Deleted video":
-								print(f"{counter}. {m.bcolors.FAIL}{vid_id}{m.bcolors.ENDC} - {m.bcolors.FAIL}(DELETED){m.bcolors.ENDC}")
+								print(
+									f"{counter}. {m.bcolors.FAIL}{vid_id}"
+									f"{m.bcolors.ENDC} - {m.bcolors.FAIL}"
+									f"(DELETED){m.bcolors.ENDC}"
+								)
 								dni.append(vid_id)
 							elif pl_item["snippet"]["title"] == "Private video":
-								print(f"{counter}. {m.bcolors.WARNING}{vid_id}{m.bcolors.ENDC} - {m.bcolors.WARNING}(PRIVATE){m.bcolors.ENDC}")
+								print(
+									f"{counter}. {m.bcolors.WARNING}{vid_id}"
+									f"{m.bcolors.ENDC} - {m.bcolors.WARNING}"
+									f"(PRIVATE){m.bcolors.ENDC}"
+								)
 								# because private videos may become public later?
 								# dni.append(vid_id)
 							else:
-								print(f"{counter}. {m.bcolors.OKGREEN}{vid_id}{m.bcolors.ENDC} - {m.bcolors.OKBLUE}{pl_item['snippet']['title']}{m.bcolors.ENDC}")
+								print(
+									f"{counter}. {m.bcolors.OKGREEN}{vid_id}"
+									f"{m.bcolors.ENDC} - {m.bcolors.OKBLUE}"
+									f"{pl_item['snippet']['title']}{m.bcolors.ENDC}"
+								)
 						else:
 							# already in list
-							print(f"{counter}. {m.bcolors.FAIL}{vid_id}{m.bcolors.ENDC} - {m.bcolors.HEADER}{pl_item['snippet']['title']}{m.bcolors.ENDC} {m.bcolors.OKCYAN}(DUPE){m.bcolors.ENDC}")
+							print(
+								f"{counter}. {m.bcolors.FAIL}{vid_id}"
+								f"{m.bcolors.ENDC} - {m.bcolors.HEADER}"
+								f"{pl_item['snippet']['title']}{m.bcolors.ENDC}"
+								f" {m.bcolors.OKCYAN}(DUPE){m.bcolors.ENDC}"
+							)
 						counter += 1
 						yield vid_id
 					response1 = youtube.playlistItems().list_next(
@@ -70,7 +95,11 @@ if __name__ == "__main__":
 						pl_items_list_response
 					)
 					OVERALL = counter - 1
-				print(f"{m.bcolors.WARNING}Appending IDs... (DO NOT EXIT WINDOW UNTIL NEXT PROMPT!){m.bcolors.ENDC}")
+				print(
+					f"{m.bcolors.WARNING}"
+					f"Appending IDs... (DO NOT EXIT WINDOW UNTIL NEXT PROMPT!)"
+					f"{m.bcolors.ENDC}"
+				)
 			except Exception as e:
 				print(f"DETAILS:\n{e}")
 
@@ -79,29 +108,54 @@ if __name__ == "__main__":
 			csi = 1	# clear screen indicator
 			try:
 				items = yt.playlistItems()
-				input_pl = input(f"{m.bcolors.HEADER}Enter a valid playlist URL or ID (type \"n\" to exit): {m.bcolors.ENDC}")
+				input_pl = input(
+					f"{m.bcolors.HEADER}"
+					f"Enter a valid playlist URL or ID (type \"n\" to exit): "
+					f"{m.bcolors.ENDC}"
+				)
 				print(m.ERASE_ABOVE.strip(), end="")
 				match = search(m.YT_PLAYLIST_ID_REGEX, input_pl)
 				while match is not None:
 					if csi == 5:
 						os.system("cls" if os.name == "nt" else "clear")
 						csi = 1
-					print(f"{m.bcolors.HEADER}Number of interactions before clear screen (up to 5): {m.bcolors.ENDC}{m.bcolors.FAIL}{csi}{m.bcolors.ENDC}")
+					print(
+						f"{m.bcolors.HEADER}"
+						f"Number of interactions before clear screen (up to 5):"
+						f" {m.bcolors.ENDC}{m.bcolors.FAIL}{csi}{m.bcolors.ENDC}"
+					)
 					included_id_count = 0
-					pl = list(OrderedDict.fromkeys(get_ids_from_playlist(yt, items, match.groups()[0])))
+					pl = list(
+						OrderedDict.fromkeys(
+							get_ids_from_playlist(yt, items, match.groups()[0])
+						)
+					)
 					for vid_id in pl:
 						if vid_id not in yt_ids_list:
-							with open(f"{m.dir_path}/ignore/yt_ids.txt", "a") as yt_id:
+							with open(
+								f"{m.dir_path}/ignore/yt_ids.txt", "a"
+							) as yt_id:
 								if vid_id not in dni:
 									yt_id.write(f"\n{vid_id}")
 									included_id_count += 1 # maybe inaccurate
-					print(f"{m.bcolors.WARNING}{m.ERASE_ABOVE}Done! Number of IDs appended: {included_id_count}/{OVERALL} ({100 * float(included_id_count)/float(OVERALL):.2f}%){m.bcolors.ENDC}")
+					print(
+						f"{m.bcolors.WARNING}{m.ERASE_ABOVE}"
+						f"Done! Number of IDs appended: "
+						f"{included_id_count}/{OVERALL} ("
+						f"{100 * float(included_id_count)/float(OVERALL):.2f}%)"
+						f"{m.bcolors.ENDC}"
+					)
 					yt_ids_list = m.load_yt_id_file()
-					input_pl = input(f"{m.bcolors.HEADER}Enter a valid playlist URL or ID (type \"n\" to exit): {m.bcolors.ENDC}")
+					input_pl = input(
+						f"{m.bcolors.HEADER}"
+						f"Enter a valid playlist URL or ID (type \"n\" to exit):"
+						f" {m.bcolors.ENDC}"
+					)
 					match = search(m.YT_PLAYLIST_ID_REGEX, input_pl)
 					csi += 1
 					OVERALL = 0
-					print(m.ERASE_ABOVE.strip(), end="")	# this breaks `csi`, fix later
+					# this breaks `csi`, fix later
+					print(m.ERASE_ABOVE.strip(), end="")
 			except Exception as e:
 				print(f"{m.bcolors.FAIL}DETAILS:\n{e}{m.bcolors.ENDC}")
 

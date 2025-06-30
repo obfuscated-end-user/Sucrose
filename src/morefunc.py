@@ -121,31 +121,36 @@ def is_id_available(
 	if include_private:
 		indicators.append("Private video")
 
-	return bool([indicator for indicator in indicators if (indicator in check.text)])
+	return bool(
+		[indicator for indicator in indicators if (indicator in check.text)]
+	)
 
 
 def find_dupes(mode: int) -> dict[str, list]:
 	"""
 	Find duplicate YouTube video IDs.
 	"""
-	duplicates = defaultdict(list)
+	dupes = defaultdict(list)
 	for i, item in enumerate(load_yt_id_file()):
 		if mode == 1:
 			print(ERASE_ABOVE, f"line {i}, id {item}")
-		duplicates[item].append(i + 1)
-	duplicates = {key:value for key,value in duplicates.items() if len(value) > 1}
+		dupes[item].append(i + 1)
+	dupes = {key:value for key,value in dupes.items() if len(value) > 1}
 
-	for key, value in duplicates.items():
+	for key, value in dupes.items():
 		print(f"{key}: {value}")
 
-	return duplicates
+	return dupes
 
 
 def print_with_timestamp(text: str) -> None:
 	"""
 	Print text into the terminal with a timestamp.
 	"""
-	print(f"{bcolors.HEADER}{datetime.now().strftime(DATE_FORMAT)}{bcolors.ENDC} {text}")
+	print(
+		f"{bcolors.HEADER}{datetime.now().strftime(DATE_FORMAT)}"
+		f"{bcolors.ENDC} {text}"
+	)
 
 
 def format_duration(s: int) -> str:
@@ -204,7 +209,9 @@ def wave_chars(
 		# +1 and /2 are done to normalize it to [0, 1]
 		sine_val = (math.sin(2 * math.pi * cycles * i / length) + 1) / 2
 		# add random noise to sine wave while limiting it to a valid range
-		noisy_val = min(max(sine_val + random.uniform(-noise_level, noise_level), 0), 1)
+		noisy_val = min(
+			max(sine_val + random.uniform(-noise_level, noise_level), 0), 1
+		)
 		# convert that to an int index
 		idx = int(noisy_val * (len(chars) - 1))
 		res.append(chars[idx])

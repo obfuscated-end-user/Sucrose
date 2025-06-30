@@ -52,7 +52,9 @@ bot.help_command = Help()
 
 
 def make_embed(text: str) -> discord.Embed:
-	"""Returns an embed."""
+	"""
+	Returns an embed.
+	"""
 	embed = discord.Embed(description=text, color=ANEMO_COLOR) # anemo color
 	embed.set_author(name="Sucrose", icon_url=m.SUCROSE_IMAGE)
 	return embed
@@ -60,14 +62,17 @@ def make_embed(text: str) -> discord.Embed:
 
 @bot.event
 async def on_ready() -> None:
-	m.print_with_timestamp(f"{c.OKBLUE}{bot.user.name}{c.ENDC} is ready and online!")
+	m.print_with_timestamp(
+		f"{c.OKBLUE}{bot.user.name}{c.ENDC} is ready and online!"
+	)
 	change_status_task.start()
 
 
 @bot.event
 async def on_connect() -> None:
 	m.print_with_timestamp(f"{c.OKGREEN}Connected!{c.ENDC}")
-	# major bug: song queue is the same across all servers this bot has joined in, fix it by checking if the server id is the same as the caller
+	# major bug: song queue is the same across all servers this bot has joined
+	# in, fix it by checking if the server id is the same as the caller
 
 
 @bot.event
@@ -78,7 +83,10 @@ async def on_disconnect() -> None:
 @bot.event
 async def on_application_command_error(ctx, error) -> None:
 	if isinstance(error, commands.BadArgument):
-		await ctx.respond(make_embed("❌ Invalid argument type provided."), ephemeral=True)
+		await ctx.respond(
+			make_embed("❌ Invalid argument type provided."),
+			ephemeral=True
+		)
 	else:
 		raise error
 
@@ -86,11 +94,20 @@ async def on_application_command_error(ctx, error) -> None:
 # change Sucrose's status on specified interval
 @tasks.loop(seconds=10)
 async def change_status_task() -> None:
-	# change this bot's status. for now, it's currently impossible to have a status just like a normal user would. for bots, you need to set it as an activity (listening, playing, streaming, etc.).
-	discord_statuses = [discord.Status.dnd, discord.Status.idle, discord.Status.online]
+	# change this bot's status. for now, it's currently impossible to have a
+	# status just like a normal user would. for bots, you need to set it as an
+	# activity (listening, playing, streaming, etc.).
+	discord_statuses = [
+		discord.Status.dnd,
+		discord.Status.idle,
+		discord.Status.online
+	]
 	game_name = random.choice(sucrose_dict.activity_names)
 	discord_status = random.choice(discord_statuses)
-	await bot.change_presence(activity=discord.Game(name=game_name), status=discord_status)
+	await bot.change_presence(
+		activity=discord.Game(name=game_name),
+		status=discord_status
+	)
 
 
 cogs = [
