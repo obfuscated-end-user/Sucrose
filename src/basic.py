@@ -183,8 +183,15 @@ class Basic(commands.Cog):
 		"""
 		Pretends to send a very important announcement.
 		"""
-		await ctx.trigger_typing()
-		await asyncio.sleep(10)
+		repeat_interval = 5
+		elapsed = 0
+
+		while elapsed < interval:
+			await ctx.trigger_typing()
+			to_sleep = min(repeat_interval, interval - elapsed)
+			await asyncio.sleep(to_sleep)
+			elapsed += to_sleep
+
 		m.print_with_timestamp(
 			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
 			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - TYPE - {interval}"

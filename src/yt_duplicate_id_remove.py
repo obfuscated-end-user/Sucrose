@@ -4,7 +4,7 @@ import sys
 import morefunc as m
 
 from collections import OrderedDict
-from random import shuffle
+# from random import shuffle
 
 if __name__ == "__main__":
 	try:
@@ -17,8 +17,8 @@ if __name__ == "__main__":
 		no_dupes = list(OrderedDict.fromkeys(yt_ids_list))
 		no_dupes_sorted = sorted(no_dupes)
 
-		yt_ids_list_shuffle = yt_ids_list
-		shuffle(yt_ids_list_shuffle)
+		# yt_ids_list_shuffle = yt_ids_list
+		# shuffle(yt_ids_list_shuffle)
 
 		def add_ids(path, ids):
 			with open(path, "w") as f:
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
 		add_ids(f"{m.dir_path}/ignore/yt_ids.txt", no_dupes)
 		add_ids(f"{m.dir_path}/ignore/yt_ids_sorted.txt", no_dupes_sorted)
-		add_ids(f"{m.dir_path}/all_ids.txt", yt_ids_list_shuffle)
+		# add_ids(f"{m.dir_path}/all_ids.txt", yt_ids_list_shuffle)
 
 		input("Done! (press enter to exit) ")
 
