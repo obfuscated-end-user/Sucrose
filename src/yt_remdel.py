@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 from random import shuffle
 
 if __name__ == "__main__":
+	# like unearthing fossils, this script tries to filter out deleted youtube
+	# videos, you know, whatever
 	try:
 		start = time.time()
 		instance = m.SingleInstance(port=5)
@@ -47,12 +49,8 @@ if __name__ == "__main__":
 				thumbnail_url,
 				headers=HEADERS
 			) as thumb_response:
-				TEST123 = f"TMB {id}"
 				if thumb_response.status == 404:
-					print(TEST123 + " FADED")
 					return True
-				else:
-					print(TEST123)
 
 			video_url = f"https://www.youtube.com/watch?v={id}/"
 			async with session.get(
@@ -62,8 +60,7 @@ if __name__ == "__main__":
 				if video_response.status != 200:
 					return True
 				text = await video_response.text()
-				TEST456 = f"VID {id}"
-				print(TEST456)
+				print(id, m.ERASE_ABOVE.strip())
 				# i know this could be made smaller, but having the exact string
 				# makes it more, i don't know, fool-proof? youtube doesn't
 				# prevent you on making your video title literally say "This
@@ -83,6 +80,7 @@ if __name__ == "__main__":
 					"This video has been removed for violating YouTube's policy on spam, deceptive practices, and scams",
 					"This video has been removed for violating YouTube's policy on violent or graphic content",
 					"This video has been removed by the uploader",
+					"This video is unavailable",
 					"This video isn't available anymore",
 				]
 
@@ -104,8 +102,7 @@ if __name__ == "__main__":
 				if video_response.status != 200:
 					return True
 				text = await video_response.text()
-				TEST456 = f"VID {id}"
-				print(TEST456)
+				print(id, m.ERASE_ABOVE.strip())
 				indicators = [
 					" private" # note the space before "private"
 				]
@@ -116,17 +113,21 @@ if __name__ == "__main__":
 		async def main() -> None:
 			async with aiohttp.ClientSession(
 				connector=aiohttp.TCPConnector(limit=20)) as session:
+				print("Checking if IDs are available...\n")
 				tasks1 = [is_id_available(id, session) for id in yt_ids]
 				results1 = await asyncio.gather(*tasks1)
 
+				print()
 				for id, is_deleted in zip(yt_ids, results1):
 					if is_deleted:
 						print(f"{id} deleted")
 						deleted_ids_temp.append(id)
-			
+
+				print("Checking if IDs are private...\n")
 				tasks2 = [is_id_private(id, session) for id in deleted_ids_temp]
 				results2 = await asyncio.gather(*tasks2)
 
+				print()
 				for id, is_deleted in zip(deleted_ids_temp, results2):
 					if is_deleted:
 						print(f"{id} deleted")
@@ -140,7 +141,7 @@ if __name__ == "__main__":
 			regex = "(none)"
 			links = "1. [luM6oeCM7Yw](https://youtu.be/dQw4w9WgXcQ)"
 		elif len(deleted_ids) == 1:
-			regex = f"({deleted_ids[0]})"
+			regex = f"({deleted_ids[0]}\\n)"
 			links = f"1. [{deleted_ids[0]}](https://youtu.be/{deleted_ids[0]})"
 		else:
 			for idx, id in enumerate(deleted_ids):
@@ -149,8 +150,8 @@ if __name__ == "__main__":
 			regex = regex[:-1] + ")"
 			print(regex)
 
-		print("\nTEMP", deleted_ids_temp)
-		print("FINAL", deleted_ids, "\n")
+		print("\nTEMP", deleted_ids_temp, len(deleted_ids_temp))
+		print("FINAL", deleted_ids, len(deleted_ids), "\n")
 
 		# use this for easy management
 		# https://addons.mozilla.org/en-US/firefox/addon/markdown-viewer-chrome
