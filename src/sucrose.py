@@ -77,7 +77,7 @@ async def on_connect() -> None:
 
 @bot.event
 async def on_disconnect() -> None:
-	m.print_with_timestamp(f"{c.FAIL}Disonnected!{c.ENDC}")
+	m.print_with_timestamp(f"{c.FAIL}Disconnected!{c.ENDC}")
 
 
 @bot.event

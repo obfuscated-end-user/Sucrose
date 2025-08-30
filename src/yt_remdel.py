@@ -146,7 +146,7 @@ if __name__ == "__main__":
 		else:
 			for idx, id in enumerate(deleted_ids):
 				regex = regex + f"{id}\\n|"
-				links = links + f"{idx + 1}. [{id}](https://youtu.be/{id})  \n"
+				links = links + f"{idx + 1}. [{id}](https://youtu.be/{id})\n"
 			regex = regex[:-1] + ")"
 			print(regex)
 
