@@ -84,7 +84,7 @@ class SingleInstance:
 			try:
 				conn, addr = self.sock.accept()
 				conn.close()
-			except socket.timeout:
+			except Exception:
 				pass
 
 
