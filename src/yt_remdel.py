@@ -43,20 +43,20 @@ def process_ids():
 	async def is_id_available(
 		id: str,
 		session: aiohttp.ClientSession
-	) -> bool:
+	) -> tuple[bool, str]:
 		"""
-		Check if ID is available. Returns True if ID is not available,
-		False otherwise.
+		Check if ID is available. Returns (True, indicator) if ID is not available,
+		(False, "") otherwise.
 		"""
 		# check thumbnail availability, because you know, if it 404s then
 		# that video does not exist anymore
-		thumbnail_url = f"https://img.youtube.com/vi/{id}/default.jpg"
+		""" thumbnail_url = f"https://img.youtube.com/vi/{id}/default.jpg"
 		async with session.get(
 			thumbnail_url,
 			headers=HEADERS
 		) as thumb_response:
 			if thumb_response.status == 404:
-				return True
+				return True, "tmb 404 not found" """
 
 		video_url = f"https://www.youtube.com/watch?v={id}/"
 		async with session.get(
@@ -64,7 +64,7 @@ def process_ids():
 			headers=HEADERS
 		) as video_response:
 			if video_response.status != 200:
-				return True
+				return True, f"HTTP Status {video_response.status}"
 			text = await video_response.text()
 			print(id, m.ERASE_ABOVE.strip())
 			# i know this could be made smaller, but having the exact string
@@ -86,11 +86,16 @@ def process_ids():
 				"This video has been removed for violating YouTube's policy on spam, deceptive practices, and scams",
 				"This video has been removed for violating YouTube's policy on violent or graphic content",
 				"This video has been removed by the uploader",
-				"This video is unavailable",
 				"This video isn't available anymore",
+				# "This video is unavailable", # this doesn't work
 			]
 
-			return any(indicator in text for indicator in indicators)
+			for indicator in indicators:
+				if indicator in text:
+					return True, indicator
+			return False, ""
+
+			# return any(indicator in text for indicator in indicators)
 
 
 	async def is_id_private(
@@ -125,21 +130,19 @@ def process_ids():
 			results1 = await asyncio.gather(*tasks1)
 
 			print()
-			for (idx, yid), is_deleted in zip(indexed_yt_ids, results1):
+			for (idx, yid), (is_deleted, indicator) in zip(indexed_yt_ids, results1):
 				if is_deleted:
-					print(f"{yid} deleted (original index {idx})")
-					deleted_ids_temp.append((idx, yid))
+					deleted_ids_temp.append((idx, yid, indicator))
 
 			print("Checking if IDs are private...\n")
 			tasks2 = [is_id_private(yid, session)
-						for idx, yid in deleted_ids_temp]
+						for idx, yid, indicator in deleted_ids_temp]
 			results2 = await asyncio.gather(*tasks2)
 
 			print()
-			for (idx, yid), is_deleted in zip(deleted_ids_temp, results2):
+			for (idx, yid, indicator), is_deleted in zip(deleted_ids_temp, results2):
 				if is_deleted:
-					print(f"{yid} deleted (original index {idx})")
-					deleted_ids.append((idx, yid))
+					deleted_ids.append((idx, yid, indicator))
 
 	print("Please wait...")
 	asyncio.run(main())
@@ -155,9 +158,9 @@ def process_ids():
 		regex = f"({deleted_ids[0][1]}\\n)"
 		links = f"1. [{deleted_ids[0][0]}: {deleted_ids[0][1]}](https://youtu.be/{deleted_ids[0][1]})"
 	else:
-		for idx_in_list, (orig_idx, id) in enumerate(sorted_deleted_ids):
+		for idx_in_list, (orig_idx, id, reason) in enumerate(sorted_deleted_ids):
 			regex = regex + f"{id}\\n|"
-			links += f"{idx_in_list + 1}. [({orig_idx + 1}) {id}](https://youtu.be/{id})\n"
+			links += f"{idx_in_list + 1}. [({orig_idx + 1}) {id}](https://youtu.be/{id}) **({reason})**\n"
 		regex = regex[:-1] + ")"
 		print(regex)
 
@@ -170,7 +173,7 @@ def process_ids():
 		f.write(
 			f"Total IDs: **{len(yt_ids_full)}**  \nID range: **{id_range}**"
 			f"  \nDeleted IDs: **{del_len}**  \n\n"
-			f"```\n{regex}\n```\n\n{links}"
+			f"```\n{regex}\n```\n`#. (original index) ID (reason)`\n\n\n{links}"
 		)
 
 	end = time.time()
