@@ -31,14 +31,19 @@ def process_ids():
 
 	# change this variable if you get frequent timeouts
 	# don't use values >2000
-	id_range = int(input("Enter an int (don't make it too large): "))
+	while True:
+		try:
+			id_range = int(input("Enter an int (don't make it too large): "))
+			break
+		except:
+			pass
 
 	yt_ids_full  = m.load_yt_id_file()
 	# keep the old index from the text file just because i want to
-	indexed_yt_ids = list(enumerate(yt_ids_full))
-	shuffle(indexed_yt_ids)
-	indexed_yt_ids = indexed_yt_ids[:id_range]
-	deleted_ids = []
+	indexed_ids = list(enumerate(yt_ids_full))
+	shuffle(indexed_ids)
+	indexed_ids = indexed_ids[:id_range]
+	del_ids = []
 
 	async def is_id_available(
 		id: str,
@@ -120,52 +125,57 @@ def process_ids():
 
 			return any(indicator not in text for indicator in indicators)
 
-	deleted_ids_temp = []
+	del_ids_temp = []
 	async def main() -> None:
 		async with aiohttp.ClientSession(
 			connector=aiohttp.TCPConnector(limit=20)) as session:
 			print("Checking if IDs are available...\n")
-			tasks1 = [is_id_available(yid, session) 
-						for idx, yid in indexed_yt_ids]
-			results1 = await asyncio.gather(*tasks1)
+			t1 = [is_id_available(yid, session) 
+				for idx, yid in indexed_ids]
+			r1 = await asyncio.gather(*t1)
 
 			print()
-			for (idx, yid), (is_deleted, indicator) in zip(indexed_yt_ids, results1):
+			for (idx, yid), (is_deleted, indicator) in zip(indexed_ids, r1):
 				if is_deleted:
-					deleted_ids_temp.append((idx, yid, indicator))
+					del_ids_temp.append((idx, yid, indicator))
 
 			print("Checking if IDs are private...\n")
-			tasks2 = [is_id_private(yid, session)
-						for idx, yid, indicator in deleted_ids_temp]
-			results2 = await asyncio.gather(*tasks2)
+			t2 = [is_id_private(yid, session)
+				for idx, yid, indicator in del_ids_temp]
+			r2 = await asyncio.gather(*t2)
 
 			print()
-			for (idx, yid, indicator), is_deleted in zip(deleted_ids_temp, results2):
+			for (idx, yid, indicator), is_deleted in zip(del_ids_temp, r2):
 				if is_deleted:
-					deleted_ids.append((idx, yid, indicator))
+					del_ids.append((idx, yid, indicator))
 
 	print("Please wait...")
 	asyncio.run(main())
 	regex = "("
 	links = ""
-	del_len = len(deleted_ids)
+	del_len = len(del_ids)
 	# sort by old index so it doesn't look random on markdown
-	sorted_deleted_ids = sorted(deleted_ids, key=lambda x: x[0])
+	sorted_del_ids = sorted(del_ids, key=lambda x: x[0])
 	if del_len <= 0:
 		regex = "(none)"
 		links = "1. [(9001) luM6oeCM7Yw](https://youtu.be/dQw4w9WgXcQ)"
 	elif del_len == 1:
-		regex = f"({deleted_ids[0][1]}\\n)"
-		links = f"1. [{deleted_ids[0][0]}: {deleted_ids[0][1]}](https://youtu.be/{deleted_ids[0][1]})"
+		regex = f"({del_ids[0][1]}\\n)"
+		links = (
+			f"1. [({del_ids[0][0] + 1}) {del_ids[0][1]}]"
+			f"(https://youtu.be/{del_ids[0][1]}) **({del_ids[0][2]})**"
+		)
 	else:
-		for idx_in_list, (orig_idx, id, reason) in enumerate(sorted_deleted_ids):
+		for idx_in_list, (orig_idx, id, reason) in enumerate(sorted_del_ids):
 			regex = regex + f"{id}\\n|"
-			links += f"{idx_in_list + 1}. [({orig_idx + 1}) {id}](https://youtu.be/{id}) **({reason})**\n"
+			links += (
+				f"{idx_in_list + 1}. [({orig_idx + 1}) {id}]"
+				f"(https://youtu.be/{id}) **({reason})**\n"
+			)
 		regex = regex[:-1] + ")"
 		print(regex)
 
-	print("\nTEMP", deleted_ids_temp, len(deleted_ids_temp))
-	print("FINAL", sorted_deleted_ids, del_len, "\n")
+	print(sorted_del_ids, del_len, "\n")
 
 	# use this for easy management
 	# https://addons.mozilla.org/en-US/firefox/addon/markdown-viewer-chrome
@@ -177,7 +187,7 @@ def process_ids():
 		)
 
 	end = time.time()
-	print(f"Time taken (in seconds): {end - start}, id_range: {id_range}\nDone!")
+	print(f"Time taken (in seconds): {end - start}, range: {id_range}\nDone!")
 
 	instance.stop()
 
