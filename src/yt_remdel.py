@@ -29,20 +29,50 @@ def process_ids():
 	# clear screen
 	os.system("cls" if os.name == "nt" else "clear")
 
-	# change this variable if you get frequent timeouts
-	# don't use values >2000
-	while True:
-		try:
-			id_range = int(input("Enter an int (don't make it too large): "))
-			break
-		except:
-			pass
-
 	yt_ids_full  = m.load_yt_id_file()
 	# keep the old index from the text file just because i want to
 	indexed_ids = list(enumerate(yt_ids_full))
-	shuffle(indexed_ids)
-	indexed_ids = indexed_ids[:id_range]
+
+	# change this variable if you get frequent timeouts
+	# don't use values >2000
+	mode = 0
+	range_start = "N/A"
+	while True:
+		try:
+			mode = int(input((
+				"Enter a mode:\n"
+				"1 - Specify a start and end and remove IDs within that range\n"
+				"2 - Randomly remove IDs within a range\n"
+			)))
+			if (mode == 1):
+				print("Don't make the gap too large!")
+				range_start = int(input("From index: "))
+				range_end = int(input("to index: "))
+				while (range_end < range_start):
+					range_end = int(input("to index: "))
+				# stupid way to catch an exception
+				indexed_ids[range_end - 1]
+				break
+			elif (mode == 2):
+				range_end = int(
+					input("Enter an int (don't make it too large): ")
+				)
+				break
+			elif (mode < 1):
+				# these too
+				lol = 1 / 0
+				break
+			elif (mode > 2):
+				lol = 1 / 0
+				break
+		except:
+			pass
+
+	if (mode == 1):
+		indexed_ids = indexed_ids[range_start:range_end]
+	elif (mode == 2):
+		shuffle(indexed_ids)
+		indexed_ids = indexed_ids[:range_end]
 	del_ids = []
 
 	async def is_id_available(
@@ -84,7 +114,6 @@ def process_ids():
 				"This video has been removed for violating YouTube's policy on nudity or sexual content",
 				"This video is no longer available because the uploader has closed their YouTube account.",
 				"This video is no longer available due to a copyright claim by",
-				"This video is no longer available due to a copyright claim by a third party",
 				"This video is no longer available because the YouTube account associated with this video has been terminated.",
 				"This video has been removed for violating YouTube's Community Guidelines",
 				"This video has been removed for violating YouTube's Terms of Service",
@@ -157,7 +186,7 @@ def process_ids():
 	# sort by old index so it doesn't look random on markdown
 	sorted_del_ids = sorted(del_ids, key=lambda x: x[0])
 	if del_len <= 0:
-		regex = "(none)"
+		regex = "(nothing to see here, don't remove anything)"
 		links = "1. [(9001) luM6oeCM7Yw](https://youtu.be/dQw4w9WgXcQ)"
 	elif del_len == 1:
 		regex = f"({del_ids[0][1]}\\n)"
@@ -181,13 +210,17 @@ def process_ids():
 	# https://addons.mozilla.org/en-US/firefox/addon/markdown-viewer-chrome
 	with open(f"{m.dir_path}/ignore/del_id_regex.md", "w") as f:
 		f.write(
-			f"Total IDs: **{len(yt_ids_full)}**  \nID range: **{id_range}**"
+			f"Total IDs: **{len(yt_ids_full)}**  \n"
+			f"From index **{range_start}** to **{range_end}**"
 			f"  \nDeleted IDs: **{del_len}**  \n\n"
 			f"```\n{regex}\n```\n`#. (original index) ID (reason)`\n\n\n{links}"
 		)
 
 	end = time.time()
-	print(f"Time taken (in seconds): {end - start}, range: {id_range}\nDone!")
+	print(
+		f"Time taken (in seconds): {end - start}, "
+		f"range: {range_start} to {range_end}\nDone!"
+	)
 
 	instance.stop()
 
