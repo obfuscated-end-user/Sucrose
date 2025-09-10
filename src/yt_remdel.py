@@ -109,6 +109,7 @@ def process_ids():
 			# nudity or sexual content".
 			indicators = [
 				# "Video unavailable", # phrase appears too many times on private videos
+				"Join this channel to get access to members-only content like this video, and other exclusive perks.",
 				"This video has been removed for violating YouTube's policy on hate speech. Learn more about combating hate speech in your country.",
 				"This video has been removed for violating YouTube's policy on harassment and bullying",
 				"This video has been removed for violating YouTube's policy on nudity or sexual content",
