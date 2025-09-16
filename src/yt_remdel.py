@@ -83,16 +83,6 @@ def process_ids():
 		Check if ID is available. Returns (True, indicator) if ID is not available,
 		(False, "") otherwise.
 		"""
-		# check thumbnail availability, because you know, if it 404s then
-		# that video does not exist anymore
-		""" thumbnail_url = f"https://img.youtube.com/vi/{id}/default.jpg"
-		async with session.get(
-			thumbnail_url,
-			headers=HEADERS
-		) as thumb_response:
-			if thumb_response.status == 404:
-				return True, "tmb 404 not found" """
-
 		video_url = f"https://www.youtube.com/watch?v={id}/"
 		async with session.get(
 			video_url,
@@ -150,7 +140,8 @@ def process_ids():
 			text = await video_response.text()
 			print(id, m.ERASE_ABOVE.strip())
 			indicators = [
-				" private" # note the space before "private"
+				" private",	# note the space before "private"
+				"HTTP Status 500"
 			]
 
 			return any(indicator not in text for indicator in indicators)
