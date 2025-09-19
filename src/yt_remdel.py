@@ -80,8 +80,8 @@ def process_ids():
 		session: aiohttp.ClientSession
 	) -> tuple[bool, str]:
 		"""
-		Check if ID is available. Returns (True, indicator) if ID is not available,
-		(False, "") otherwise.
+		Check if ID is available. Returns (True, indicator) if ID is not
+		available, (False, "") otherwise.
 		"""
 		video_url = f"https://www.youtube.com/watch?v={id}/"
 		async with session.get(
@@ -93,10 +93,10 @@ def process_ids():
 			text = await video_response.text()
 			print(id, m.ERASE_ABOVE.strip())
 			# i know this could be made smaller, but having the exact string
-			# makes it more, i don't know, fool-proof? youtube doesn't
-			# prevent you on making your video title literally say "This
-			# video has been removed for violating YouTube's policy on
-			# nudity or sexual content".
+			# makes it more, i don't know, fool-proof? youtube doesn't prevent
+			# you on making your video title literally say "This video has been
+			# removed for violating YouTube's policy on nudity or sexual
+			# content".
 			indicators = [
 				# "Video unavailable", # phrase appears too many times on private videos
 				"Join this channel to get access to members-only content like this video, and other exclusive perks.",
