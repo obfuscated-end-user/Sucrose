@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import re
 import time
 
 import discord
@@ -7,11 +8,36 @@ import morefunc as m
 import requests
 import yt_dlp
 
+from add_id import add_id
 from bs4 import BeautifulSoup
 from discord.ext import bridge, commands
 from morefunc import bcolors as c
 from random import randrange, shuffle, uniform
 from sucrose import make_embed, ANEMO_COLOR
+
+yt_link_regex = re.compile("(?:(?<=^)|(?<==)|(?<=/))([\w_\-]{11})(?=(&|$))")
+
+def add_id_music_bot(id: str) -> None:
+	"""
+	Add an ID from the list of IDs.
+	"""
+	# It's up to you to find patterns in chaos.
+	if re.search(m.YT_VIDEO_ID_REGEX, id):
+		if (id not in yt_ids_list):
+			with open(f"{m.dir_path}/ignore/yt_ids.txt", "a") as file:
+				file.write(f"\n{id}")
+				yt_ids_list.append(id)
+		else:
+			pass
+	else:
+		pass
+
+
+def id_exists(id: str):
+	for line in yt_ids_list:
+		if id in line:
+			return True
+		return False
 
 class VoiceError(Exception):
 	pass
@@ -61,7 +87,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 		date = data.get("upload_date")
 		# self.upload_date = date[6:8] + "." + date[4:6] + "." + date[0:4] if date else "unknown"
 		self.title = m.escape_markdown(rf"{data.get('title')}")
-		self.thumbnail = data.get("thumbnail")
+		# self.thumbnail = data.get("thumbnail")
 		# self.description = data.get("description")
 		self.duration_sec = int(data.get("duration", 0))
 		self.duration = m.format_duration(self.duration_sec)
@@ -74,7 +100,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 	def __str__(self):
 		return (f"{c.OKCYAN}{self.title}{c.ENDC} - "
-				f"{c.WARNING}({self.duration}){c.ENDC}")
+				f"{c.WARNING}({self.duration}){c.ENDC} - "
+				f"{c.OKBLUE}({self.url}){c.ENDC}")
 
 
 	@classmethod
@@ -209,6 +236,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 
 bot = bridge.Bot()
+yt_ids_list = m.load_yt_id_file()
 
 class Music(commands.Cog):
 	def __init__(self, bot: discord.ext.bridge.Bot):
@@ -335,6 +363,10 @@ class Music(commands.Cog):
 				if not vc.is_playing():
 					self.current_track = self.track_queue[0]
 					self.stop_track = source
+					yt_id_regex = yt_link_regex.search(source.url).group(1)
+					if re.match(m.YT_VIDEO_ID_REGEX, yt_id_regex):
+						if not id_exists(yt_id_regex):
+							add_id_music_bot(yt_id_regex)
 					vc.play(
 						self.current_track,
 						after=lambda e:
@@ -352,6 +384,10 @@ class Music(commands.Cog):
 						or "https://music.youtube.com/playlist?list=" in search:
 						pass
 					else:
+						yt_id_regex = yt_link_regex.search(source.url).group(1)
+						if re.match(m.YT_VIDEO_ID_REGEX, yt_id_regex):
+							if not id_exists(yt_id_regex):
+								add_id_music_bot(yt_id_regex)
 						await ctx.respond(embed=make_embed(
 							f"👌 **[{source.title}]({source.url})** "
 							f"added to the queue **`({source.duration})`**."),
