@@ -475,8 +475,9 @@ class Music(commands.Cog):
 		ctx: discord.ext.bridge.context.BridgeApplicationContext
 	) -> None:
 		"""
-		Skips the current track and plays the next track in the queue.
-		If there is only one track left in the queue, stop playing the current track.
+		Skips the current track and plays the next track in the queue.  
+		If there is only one track left in the queue, stop playing the current
+		track.  
 		You can't play back a skipped track, you need to queue it again.
 		"""
 		self.looping = False
@@ -582,7 +583,7 @@ class Music(commands.Cog):
 		ctx: discord.ext.bridge.context.BridgeApplicationContext
 	) -> None:
 		"""
-		Stops the current track. Stopped track cannot be resumed afterwards.
+		Stops the current track. Stopped track cannot be resumed afterwards.  
 		Also clears the queue.
 		"""
 		vc = ctx.voice_client
@@ -659,7 +660,8 @@ class Music(commands.Cog):
 		ctx: discord.ext.bridge.context.BridgeApplicationContext
 	) -> None:
 		"""
-		Resumes the current paused track. Does nothing if the track is currently playing.
+		Resumes the current paused track. Does nothing if the track is currently
+		playing.
 		"""
 		vc = ctx.voice_client
 		if vc.is_paused():
@@ -691,7 +693,8 @@ class Music(commands.Cog):
 	) -> None:
 		"""
 		Shows the tracks queued by Sucrose.
-		Can be used with an optional integer parameter to show a specific page (e.g. `s!queue 2`), if applicable. 
+		Can be used with an optional integer parameter to show a specific page
+		(e.g. `s!queue 2`), if applicable. 
 		"""
 		try:
 			page = int(page)
@@ -763,8 +766,8 @@ class Music(commands.Cog):
 						else:
 							queue_embed.add_field(
 								name="",
-								value=f"**{self.track_queue.index(track) + 1}.** "
-								f"[{track.title}]({track.url}) - "
+								value=f"**{self.track_queue.index(track) + 1}.**"
+								f" [{track.title}]({track.url}) - "
 								f"**`({track.duration})`**\n",
 								inline=False
 							)
@@ -791,7 +794,8 @@ class Music(commands.Cog):
 					"You must be in a voice channel to use this command."),
 				delete_after=15
 			)
-		temp = self.track_queue[1:] # shuffle the entire queue BUT the current track
+		# shuffle the entire queue BUT the current track
+		temp = self.track_queue[1:]
 		for _ in range(1, len(self.track_queue)):
 			self.track_queue.pop()
 		shuffle(temp)
@@ -842,7 +846,8 @@ class Music(commands.Cog):
 				cycles=randrange(1, 9),
 				noise_level=uniform(0, 1)
 			)
-			fake_buttons = "⇌  ♡	   ⏮  ⏸  ⏭	 ≡  ⟲".center(len(progress_bar))
+			fake_buttons = "⇌  ♡	   ⏮  ⏸  ⏭	 ≡  ⟲".center(
+				len(progress_bar))
 
 			# truncate title and artist strings if they become too long
 			# don't expect this to center properly if the string contains
