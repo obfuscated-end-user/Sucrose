@@ -1,6 +1,7 @@
 # uses pycord
 import aiohttp
 import asyncio
+import os
 import random
 
 import discord
@@ -196,6 +197,31 @@ class Basic(commands.Cog):
 			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
 			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - TYPE - {interval}"
 		)
+
+
+
+	@bot.bridge_command(aliases=["fumofumo"])
+	async def fumo(
+		self, 
+		ctx: discord.ext.bridge.context.BridgeApplicationContext
+	) -> None:
+		"""
+		ᗜˬᗜ
+		"""
+		fumo_path = f"{m.dir_path}/ignore/fumo"
+
+		images = [file for file in os.listdir(fumo_path)
+			if file.lower().endswith((".png", ".jpg", ".jpeg", ".gif", "webp"))]
+		
+		if not images:
+			await ctx.respond("ᗜ˰ᗜ NOT FUNKY")
+			return
+
+		chosen_fumo = random.choice(images)
+		file_path = os.path.join(fumo_path, chosen_fumo)
+		file = discord.File(file_path, filename=chosen_fumo)
+
+		await ctx.respond(file=file)
 
 
 	@bot.bridge_command(aliases=["abt"])
