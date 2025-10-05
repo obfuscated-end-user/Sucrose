@@ -221,6 +221,11 @@ class Basic(commands.Cog):
 		file_path = os.path.join(fumo_path, chosen_fumo)
 		file = discord.File(file_path, filename=chosen_fumo)
 
+		m.print_with_timestamp(
+			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
+			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - FUMO - {file.filename}"
+		)
+
 		await ctx.respond(file=file)
 
 
