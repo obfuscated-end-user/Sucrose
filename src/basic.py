@@ -199,7 +199,6 @@ class Basic(commands.Cog):
 		)
 
 
-
 	@bot.bridge_command(aliases=["fumofumo"])
 	async def fumo(
 		self, 
