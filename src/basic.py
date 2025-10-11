@@ -100,11 +100,13 @@ class Basic(commands.Cog):
 		Fetch a random English Wikipedia article.
 		"""
 		try:
-			response = requests.get("https://en.wikipedia.org/wiki/Special:Random")
+			response = requests.get(
+				"https://en.wikipedia.org/wiki/Special:Random"
+			)
 
 			url = response.url
 			# wikipedia article urls are like:
-			# https://en.wikipedia.org/wiki/Article_Name
+			# https://en.wikipedia.org/wiki/Article_name
 			article_name = url.split("/wiki/")[-1].replace("_", " ")
 			markdown_link = f"[.]({url})"
 
@@ -145,10 +147,18 @@ class Basic(commands.Cog):
 		"""
 		Get random xkcd comic.
 		"""
-		MAX_XKCD_COUNT = 3108
+		# get the latest xkcd comic dynamically
+		async with aiohttp.ClientSession() as session:
+			# this returns the latest comic # for some reason
+			async with session.get("https://xkcd.com/info.0.json") as resp:
+				if resp.status != 200:
+					return
+				for_max = await resp.json()
+		MAX_XKCD_COUNT: int = for_max["num"]
 		# because xkcd #404 actually returns a 404 page
-		id = random.choice([i for i in range(1, MAX_XKCD_COUNT) if i not in [404]])
-		# https://xkcd.com/json.html
+		id = random.choice(
+			[i for i in range(1, MAX_XKCD_COUNT) if i not in [404]]
+		)
 		url = f"https://xkcd.com/{id}/info.0.json"
 		async with aiohttp.ClientSession() as session:
 			async with session.get(url) as resp:
@@ -167,7 +177,8 @@ class Basic(commands.Cog):
 		)
 		embed.set_image(url=data["img"])
 		embed.set_footer(text="xkcd")
-		await ctx.respond(embed=embed, delete_after=60)
+		# delete_after=60
+		await ctx.respond(embed=embed)
 		m.print_with_timestamp(
 			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
 			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - XKCD - {id}"
