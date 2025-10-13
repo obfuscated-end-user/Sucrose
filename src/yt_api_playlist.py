@@ -25,6 +25,7 @@ if __name__ == "__main__":
 			developerKey=API_KEY
 		)
 		dni = [] # do not include
+		dupe_del = [] # deleted, but currently in list
 		yt_ids_list = m.load_yt_id_file()
 		ctypes.windll.kernel32.SetConsoleTitleW("Add YouTube video IDs by playlist IDs")
 
@@ -52,7 +53,12 @@ if __name__ == "__main__":
 						f"{response2['items'][0]['snippet']['title']}"
 						f"{m.bcolors.ENDC}"
 					)
-
+				display_str = ""
+				# use these ids to test (subject to change)
+				# PLbYN2TAnooBC2_cdkh8_CdwEEwrE-9i7B - 1 id
+				# PLdJu4NMc51MDvmXeRiUykpy7Ujy9UaNAk - 1 id
+				# PLNtcigB9Mc_IElsxqFKHNmkTSQD7ESB-b - 5 ids
+				# Deleted video (DUPE)
 				counter = 1
 				while response1:
 					pl_items_list_response = response1.execute()
@@ -60,34 +66,47 @@ if __name__ == "__main__":
 						vid_id = pl_item["snippet"]["resourceId"]["videoId"]
 						if vid_id not in yt_ids_list:
 							if pl_item["snippet"]["title"] == "Deleted video":
-								print(
+								display_str = (
 									f"{counter}. {m.bcolors.FAIL}{vid_id}"
 									f"{m.bcolors.ENDC} - {m.bcolors.FAIL}"
 									f"(DELETED){m.bcolors.ENDC}"
 								)
+								print(display_str)
 								dni.append(vid_id)
 							elif pl_item["snippet"]["title"] == "Private video":
-								print(
+								display_str = (
 									f"{counter}. {m.bcolors.WARNING}{vid_id}"
 									f"{m.bcolors.ENDC} - {m.bcolors.WARNING}"
 									f"(PRIVATE){m.bcolors.ENDC}"
 								)
+								print(display_str)
 								# because private videos may become public later?
 								# dni.append(vid_id)
 							else:
-								print(
+								display_str = (
 									f"{counter}. {m.bcolors.OKGREEN}{vid_id}"
 									f"{m.bcolors.ENDC} - {m.bcolors.OKBLUE}"
 									f"{pl_item['snippet']['title']}{m.bcolors.ENDC}"
 								)
+								print(display_str)
 						else:
 							# already in list
-							print(
+							display_str = (
 								f"{counter}. {m.bcolors.FAIL}{vid_id}"
 								f"{m.bcolors.ENDC} - {m.bcolors.HEADER}"
 								f"{pl_item['snippet']['title']}{m.bcolors.ENDC}"
 								f" {m.bcolors.OKCYAN}(DUPE){m.bcolors.ENDC}"
 							)
+							# this will only fail if a video has the exact same
+							# string on the title
+							dupe_del_string = (
+								f"- {m.bcolors.HEADER}Deleted video"
+								f"{m.bcolors.ENDC} {m.bcolors.OKCYAN}"
+								f"(DUPE){m.bcolors.ENDC}"
+							)
+							if dupe_del_string in display_str:
+								dupe_del.append(vid_id)
+							print(display_str)
 						counter += 1
 						yield vid_id
 					response1 = youtube.playlistItems().list_next(
@@ -95,6 +114,16 @@ if __name__ == "__main__":
 						pl_items_list_response
 					)
 					OVERALL = counter - 1
+				if dupe_del:
+					temp = ""
+					if len(dupe_del) == 1:
+						temp = f"({dupe_del[0]}\\n)"
+					else:
+						temp1 = "(" + "".join([f"{id}\\n|" for id in dupe_del])
+						temp = temp1[:-1] + ")"
+					print(f"\n{m.bcolors.WARNING}REMOVE THESE!{m.bcolors.ENDC}")
+					print(f"{m.bcolors.FAIL}{temp}{m.bcolors.ENDC}")
+				dupe_del.clear()
 				print(
 					f"{m.bcolors.WARNING}"
 					f"Appending IDs... (DO NOT EXIT WINDOW UNTIL NEXT PROMPT!)"
@@ -109,7 +138,7 @@ if __name__ == "__main__":
 			try:
 				items = yt.playlistItems()
 				input_pl = input(
-					f"{m.bcolors.HEADER}"
+					f"{m.bcolors.OKBLUE}"
 					f"Enter a valid playlist URL or ID (type \"n\" to exit): "
 					f"{m.bcolors.ENDC}"
 				)
@@ -147,8 +176,8 @@ if __name__ == "__main__":
 					)
 					yt_ids_list = m.load_yt_id_file()
 					input_pl = input(
-						f"{m.bcolors.HEADER}"
-						f"Enter a valid playlist URL or ID (type \"n\" to exit):"
+						f"{m.bcolors.OKBLUE}"
+						f"Enter a valid playlist URL/ID (type \"n\" to exit):"
 						f" {m.bcolors.ENDC}"
 					)
 					match = search(m.YT_PLAYLIST_ID_REGEX, input_pl)
