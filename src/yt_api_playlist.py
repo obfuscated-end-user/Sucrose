@@ -54,11 +54,6 @@ if __name__ == "__main__":
 						f"{m.bcolors.ENDC}"
 					)
 				display_str = ""
-				# use these ids to test (subject to change)
-				# PLbYN2TAnooBC2_cdkh8_CdwEEwrE-9i7B - 1 id
-				# PLdJu4NMc51MDvmXeRiUykpy7Ujy9UaNAk - 1 id
-				# PLNtcigB9Mc_IElsxqFKHNmkTSQD7ESB-b - 5 ids
-				# Deleted video (DUPE)
 				counter = 1
 				while response1:
 					pl_items_list_response = response1.execute()

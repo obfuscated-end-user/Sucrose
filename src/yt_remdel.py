@@ -120,8 +120,6 @@ def process_ids():
 					return True, indicator
 			return False, ""
 
-			# return any(indicator in text for indicator in indicators)
-
 
 	async def is_id_private(
 		id: str,
