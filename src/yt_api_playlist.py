@@ -119,11 +119,6 @@ if __name__ == "__main__":
 					print(f"\n{m.bcolors.WARNING}REMOVE THESE!{m.bcolors.ENDC}")
 					print(f"{m.bcolors.FAIL}{temp}{m.bcolors.ENDC}")
 				dupe_del.clear()
-				print(
-					f"{m.bcolors.WARNING}"
-					f"Appending IDs... (DO NOT EXIT WINDOW UNTIL NEXT PROMPT!)"
-					f"{m.bcolors.ENDC}"
-				)
 			except Exception as e:
 				print(f"DETAILS:\n{e}")
 
@@ -154,6 +149,7 @@ if __name__ == "__main__":
 							get_ids_from_playlist(yt, items, match.groups()[0])
 						)
 					)
+					print()
 					for vid_id in pl:
 						if vid_id not in yt_ids_list:
 							with open(
@@ -161,6 +157,14 @@ if __name__ == "__main__":
 							) as yt_id:
 								if vid_id not in dni:
 									yt_id.write(f"\n{vid_id}")
+									print(
+										f"{m.bcolors.WARNING}{m.ERASE_ABOVE}"
+										f"Processing{m.bcolors.ENDC} "
+										f"{m.bcolors.OKBLUE}{vid_id}"
+										f"{m.bcolors.ENDC}{m.bcolors.WARNING}, "
+										"(DO NOT EXIT WINDOW UNTIL NEXT PROMPT!"
+										f"){m.bcolors.ENDC}"
+									)
 									included_id_count += 1 # maybe inaccurate
 					print(
 						f"{m.bcolors.WARNING}{m.ERASE_ABOVE}"
