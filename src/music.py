@@ -12,8 +12,9 @@ from add_id import add_id
 from bs4 import BeautifulSoup
 from discord.ext import bridge, commands
 from morefunc import bcolors as c
-from random import randrange, shuffle, uniform
+from random import choice, randrange, shuffle, uniform
 from sucrose import make_embed, ANEMO_COLOR
+from yt_bot import get_id
 
 yt_link_regex = re.compile("(?:(?<=^)|(?<==)|(?<=/))([\w_\-]{11})(?=(&|$))")
 
@@ -39,6 +40,7 @@ def id_exists(id: str):
 			return True
 		return False
 
+
 class VoiceError(Exception):
 	pass
 
@@ -49,7 +51,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 		"audioformat": "m4a", # mp3 m4a aac
 		"outtmpl": "%(extractor)s-%(id)s-%(title)s.%(ext)s",
 		"restrictfilenames": True,
-		"cookies_from_browser": "firefox",
+		# "cookies": f"{m.dir_path}/ignore/cookies-youtube-com.txt",
 		# "noplaylist": True,
 		# "playlist_items": "1",
 		"nocheckcertificate": True,
@@ -273,7 +275,6 @@ class Music(commands.Cog):
 		* Spotify album and playlist links
 		* Tidal
 		"""
-
 		vc = ctx.voice_client
 		if not ctx.author.voice or not ctx.author.voice.channel:
 			return await ctx.respond(
@@ -301,7 +302,6 @@ class Music(commands.Cog):
 					"You must be in the same voice channel as the bot."),
 					delete_after=15
 				)
-
 		else:
 			try:
 				if "https://www.youtube.com/playlist?list=" in search \
@@ -404,6 +404,71 @@ class Music(commands.Cog):
 			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
 			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - PLAY"
 			f"\n\t{f'{chr(10)}{chr(9)}'.join(song.__str__() for song in self.track_queue)}"
+		)
+
+
+	@bot.bridge_command(aliases=["pr", "rand", "prand", "random"])
+	async def play_random(
+		self,
+		ctx: discord.ext.bridge.context.BridgeApplicationContext
+	) -> None:
+		"""
+		(NSFW WARNING) Play a random audio track from YouTube.
+		Doesn't need to be music.
+		"""
+		vc = ctx.voice_client
+		if not ctx.author.voice or not ctx.author.voice.channel:
+			return await ctx.respond(
+				embed=make_embed(
+					"You need to be in a voice channel to play music."
+				))
+
+		if not vc:
+			try:
+				vc = await ctx.author.voice.channel.connect()
+			except discord.Forbidden:
+				return await ctx.respond(
+					embed=make_embed(
+						"I don't have permission to join that voice channel."
+					))
+			except discord.ClientException:
+				return await ctx.respond(
+					embed=make_embed(
+						"I am already connected to a voice channel."
+					))
+
+		await ctx.respond(embed=make_embed(
+			"⏳️ Adding a random track to the queue...",),
+			delete_after=15
+		)
+		link = m.yt_link_formats[2] + get_id()
+		source = await YTDLSource.create_sources(ctx, link, loop=self.bot.loop)
+		if not vc.is_playing():
+			self.track_queue.append(source)
+			self.current_track = self.track_queue[0]
+			self.stop_track = source
+			vc.play(
+				source,
+				after=lambda e: self.bot.loop.create_task(self.play_next(ctx))
+			)
+			self.track_time_start = time.time()
+			await ctx.respond(embed=make_embed(
+				f"▶️ Now playing: **[{self.current_track.title}]"
+				f"({self.current_track.url})** "
+				f"**`({self.current_track.duration})`**."),
+				delete_after=15
+			)
+		else:
+			self.track_queue.append(source)
+			await ctx.respond(embed=make_embed(
+				f"👌 **[{source.title}]({source.url})** "
+				f"added to the queue **`({source.duration})`**."),
+				delete_after=15
+			)
+		m.print_with_timestamp(
+			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
+			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - PLAYRANDOM"
+			f"\n\t{source.url}"
 		)
 
 

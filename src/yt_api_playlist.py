@@ -162,8 +162,8 @@ if __name__ == "__main__":
 										f"Processing{m.bcolors.ENDC} "
 										f"{m.bcolors.OKBLUE}{vid_id}"
 										f"{m.bcolors.ENDC}{m.bcolors.WARNING}, "
-										"(DO NOT EXIT WINDOW UNTIL NEXT PROMPT!"
-										f"){m.bcolors.ENDC}"
+										"DO NOT EXIT WINDOW UNTIL NEXT PROMPT!"
+										f"{m.bcolors.ENDC}"
 									)
 									included_id_count += 1 # maybe inaccurate
 					print(

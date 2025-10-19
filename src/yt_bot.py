@@ -19,7 +19,7 @@ bot = bridge.Bot()
 start = time.time()
 yt_ids = m.load_yt_id_file()
 shuffle(yt_ids)
-yt_ids = yt_ids[:2000]
+yt_ids = yt_ids[:1000]
 end = time.time()
 m.print_with_timestamp(f"Time taken to process the ID list: {end - start}")
 
@@ -86,8 +86,8 @@ class Yt_Bot(commands.Cog):
 			"may be deleted or set to private. "
 			"Alternatively, you can try viewing it "
 			f"[here](https://web.archive.org/web/https://www.youtube.com/watch?v={id}).\n"
-			f"Click [here](https://web.archive.org/save/https://www.youtube.com/shorts/{id}) "
-			"to save a copy to the Wayback Machine."
+			f"Click [here](https://web.archive.org/save/https://www.youtube.com/shorts/{id})"
+			" to save a copy to the Wayback Machine."
 			f"\n\nTitle: **{title}**\nUploader: **{uploader}**\nDate uploaded: "
 			f"**{date_uploaded} ({time_diff})**\nViews: **{view_count}**"
 		)
