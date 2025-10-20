@@ -489,7 +489,8 @@ class Music(commands.Cog):
 
 	async def play_next(
 		self,
-		ctx: discord.ext.bridge.context.BridgeApplicationContext
+		ctx: discord.ext.bridge.context.BridgeApplicationContext,
+		n: int = 0
 	) -> None:
 		"""
 		Called when a track ends.
@@ -515,7 +516,9 @@ class Music(commands.Cog):
 					self.track_time_start = time.time()
 					self.now_playing_time = None
 					self.pause_resume_time = None
-					self.track_queue.pop(0)
+					# DO NOT SET THIS TO JUST n
+					for _ in range(n + 1):
+						self.track_queue.pop(0)
 					self.current_track = self.track_queue[0]
 					vc.stop()
 					vc.play(
@@ -537,7 +540,8 @@ class Music(commands.Cog):
 	@bridge.bridge_command(aliases=["next", "kip", "slip", "n", "s"])
 	async def skip(
 		self,
-		ctx: discord.ext.bridge.context.BridgeApplicationContext
+		ctx: discord.ext.bridge.context.BridgeApplicationContext,
+		n: int = 1
 	) -> None:
 		"""
 		Skips the current track and plays the next track in the queue.  
@@ -585,9 +589,9 @@ class Music(commands.Cog):
 				f"\n\t{f'{chr(10)}{chr(9)}'.join(song.__str__() for song in self.track_queue)}"
 			)
 			skipped_track = self.track_queue[0]
-			next_track = self.track_queue[1]
+			next_track = self.track_queue[n - 1] # 1
 			vc.stop()
-			await self.play_next(ctx)
+			await self.play_next(ctx, n - 2)
 			self.current_track = next_track
 			await ctx.respond(embed=make_embed(
 				f"⏭️ Skipped **[{skipped_track.title}]({skipped_track.url})** "
@@ -822,9 +826,9 @@ class Music(commands.Cog):
 								name="",
 								value=
 									f"**{self.track_queue.index(track) + 1}.** "
-									f"**[{self.current_track.title}]"
-									f"({self.current_track.url})** - "
-									f"**`({self.current_track.duration})`** 🎶\n",
+									f"**[{track.title}]"
+									f"({track.url})** - "
+									f"**`({track.duration})`** 🎶\n",
 									inline=False
 								)
 							first_track = False
