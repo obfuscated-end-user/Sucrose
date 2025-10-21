@@ -107,14 +107,17 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 
 	@classmethod
-	async def create_sources(
+	async def create_source(
 		cls,
 		ctx: commands.Context,
 		search: str,
 		*,
 		loop: asyncio.BaseEventLoop=None,
-		get_playlist: bool=False
 	):
+		"""
+		Create a source for a single track.
+		"""
+
 		start = time.time()
 		loop = loop or asyncio.get_event_loop()
 
@@ -128,113 +131,108 @@ class YTDLSource(discord.PCMVolumeTransformer):
 			)
 			return await loop.run_in_executor(None, partial)
 
-		if get_playlist:	# if user queries a playlist
-			playlist_data = await extract_info(
-				search, download=False, process=True
-			)
-			if not playlist_data or "entries" not in playlist_data \
-				or not playlist_data["entries"]:
-				raise VoiceError(
-					f"Couldn't find any entries in the playlist `{search}`"
-				)
-
-			sources = []
-			for entry in playlist_data["entries"]:
-				if entry is None:
-					continue
-
-				video_data = await extract_info(
-					entry["webpage_url"], download=False, process=True
-				)
-				if not video_data:
-					continue
-
-				if "entries" in video_data:
-					video_data = video_data["entries"][0]
-
-				if video_data.get("age_limit", 0) > 0:
-					m.print_with_timestamp(
-						f"skipped age-restricted video: {video_data['title']}"
-					)
-					continue
-
-				source = cls(
-					ctx, discord.FFmpegPCMAudio(video_data["url"],
-					**cls.FFMPEG_OPTIONS), data=video_data
-				)
-				sources.append(source)
-
-			if not sources:
-				raise VoiceError(
-					"Couldn't retrieve any playable videos from the playlist "
-					f"`{search}`"
-				)
-			
-			end = time.time()
-			m.print_with_timestamp(
-				f"{c.WARNING}Time taken to process create_sources() (playlist):"
-				f" {end - start}{c.ENDC}"
+		data = await extract_info(search, download=False, process=False)
+		if not data:
+			raise VoiceError(
+				f"Couldn't find anything that matches `{search}`"
 			)
 
-			return sources
-
-		# if user queries a single track
+		# if data contains multiple entries, pick the first valid one
+		if "entries" in data:
+			process_info = next(
+				(entry for entry in data["entries"] if entry), None
+			)
+			if not process_info:
+				raise VoiceError(
+					f"Couldn't find any valid entries for `{search}`"
+				)
 		else:
-			data = await extract_info(search, download=False, process=False)
-			if not data:
-				raise VoiceError(
-					f"Couldn't find anything that matches `{search}`"
-				)
+			process_info = data
 
-			# if data contains multiple entries, pick the first valid one
-			if "entries" in data:
-				process_info = next(
-					(entry for entry in data["entries"] if entry), None
-				)
-				if not process_info:
+		webpage_url = process_info["webpage_url"]
+		if not webpage_url:
+			raise VoiceError(
+				f"Couldn't find a valid URL for `{search}`"
+			)
+
+		processed_info = await extract_info(
+			webpage_url, download=False, process=True
+		)
+		if not processed_info:
+			raise VoiceError(f"Couldn't fetch `{webpage_url}`")
+
+		# if processed_info is a playlist, pop the first valid entry
+		if "entries" in processed_info:
+			info = None
+			while info is None:
+				try:
+					info = processed_info["entries"].pop(0)
+				except IndexError:
 					raise VoiceError(
-						f"Couldn't find any valid entries for `{search}`"
+						f"Couldn't retrieve any matches for `{webpage_url}`"
 					)
-			else:
-				process_info = data
+		else:
+			info = processed_info
+		
+		end = time.time()
+		m.print_with_timestamp(
+			f"{c.WARNING}Time taken to process create_source() "
+			f"(single track): {end - start}{c.ENDC}"
+		)
 
-			webpage_url = process_info["webpage_url"]
-			if not webpage_url:
-				raise VoiceError(
-					f"Couldn't find a valid URL for `{search}`"
-				)
+		source = cls(
+			ctx, discord.FFmpegPCMAudio(info["url"],
+			**cls.FFMPEG_OPTIONS), data=info
+		)
 
-			processed_info = await extract_info(
-				webpage_url, download=False, process=True
+		return source
+
+	@classmethod
+	async def create_playlist_sources(
+		cls,
+		ctx:	commands.Context,
+		playlist_url:	str,
+	):
+		"""
+		Create sources for each track in a playlist.
+		"""
+
+		start = time.time()
+		loop = asyncio.get_event_loop()
+
+		def extract():
+			return YTDLSource.ytdl.extract_info(playlist_url, download=False)
+
+		playlist_data = await loop.run_in_executor(None, extract)
+		if not playlist_data or "entries" not in playlist_data:
+			raise VoiceError(
+				f"Couldn't find any entries in the playlist `{playlist_url}`"
 			)
-			if not processed_info:
-				raise VoiceError(f"Couldn't fetch `{webpage_url}`")
 
-			# if processed_info is a playlist, pop the first valid entry
-			if "entries" in processed_info:
-				info = None
-				while info is None:
-					try:
-						info = processed_info["entries"].pop(0)
-					except IndexError:
-						raise VoiceError(
-							f"Couldn't retrieve any matches for `{webpage_url}`"
-						)
-			else:
-				info = processed_info
-			
-			end = time.time()
-			m.print_with_timestamp(
-				f"{c.WARNING}Time taken to process create_sources() "
-				f"(single track): {end - start}{c.ENDC}"
+		sources = []
+		for entry in playlist_data["entries"]:
+			if entry is None:
+				continue
+
+			source = YTDLSource(
+				ctx, 
+				discord.FFmpegPCMAudio(entry["url"], **cls.FFMPEG_OPTIONS),
+				data=entry
 			)
+			sources.append(source)
 
-			source = cls(
-				ctx, discord.FFmpegPCMAudio(info["url"],
-				**cls.FFMPEG_OPTIONS), data=info
+		if not sources:
+			raise VoiceError(
+				"Couldn't retrieve any playable videos from the "
+				f"playlist `{playlist_url}`"
 			)
-
-			return source
+		
+		end = time.time()
+		m.print_with_timestamp(
+			f"{c.WARNING}Time taken to process create_playlist_sources(): "
+			f"{end - start}{c.ENDC}"
+		)
+		return sources
 
 
 bot = bridge.Bot()
@@ -310,9 +308,7 @@ class Music(commands.Cog):
 						embed=make_embed("⏳️ Loading YouTube playlist..."),
 						delete_after=60
 					)
-					sources = await YTDLSource.create_sources(
-						ctx, search, loop=self.bot.loop, get_playlist=True
-					)
+					sources = await YTDLSource.create_playlist_sources(ctx, search)
 					for source in sources:
 						self.track_queue.append(source)
 					await ctx.respond(
@@ -337,7 +333,7 @@ class Music(commands.Cog):
 					# album = meta_tag[1]
 					# year = meta_tag[-1]
 
-					source = await YTDLSource.create_sources(
+					source = await YTDLSource.create_source(
 						ctx, f"{track_name} {artist_name}", loop=self.bot.loop
 					)
 					self.track_queue.append(source)
@@ -355,7 +351,7 @@ class Music(commands.Cog):
 							f"🔍 Searching for **\"{search}\"**..."),
 							delete_after=15
 						)
-					source = await YTDLSource.create_sources(
+					source = await YTDLSource.create_source(
 						ctx, search, loop=self.bot.loop
 					)
 					self.track_queue.append(source)
@@ -442,7 +438,7 @@ class Music(commands.Cog):
 			delete_after=15
 		)
 		link = m.yt_link_formats[2] + get_id()
-		source = await YTDLSource.create_sources(ctx, link, loop=self.bot.loop)
+		source = await YTDLSource.create_source(ctx, link, loop=self.bot.loop)
 		if not vc.is_playing():
 			self.track_queue.append(source)
 			self.current_track = self.track_queue[0]
@@ -490,7 +486,7 @@ class Music(commands.Cog):
 	async def play_next(
 		self,
 		ctx: discord.ext.bridge.context.BridgeApplicationContext,
-		n: int = 0
+		n: int=0
 	) -> None:
 		"""
 		Called when a track ends.
@@ -502,9 +498,9 @@ class Music(commands.Cog):
 				if self.looping:
 					self.track_time_start = time.time()
 					self.now_playing_time = None
-					looped_track = await YTDLSource.create_sources(
+					looped_track = await YTDLSource.create_source(
 						ctx, self.current_track.url,
-						loop=self.bot.loop, get_playlist=False
+						loop=self.bot.loop
 					)
 					vc.stop()
 					vc.play(
@@ -541,7 +537,7 @@ class Music(commands.Cog):
 	async def skip(
 		self,
 		ctx: discord.ext.bridge.context.BridgeApplicationContext,
-		n: int = 1
+		n: int=1
 	) -> None:
 		"""
 		Skips the current track and plays the next track in the queue.  
@@ -582,7 +578,6 @@ class Music(commands.Cog):
 			return
 
 		if len(self.track_queue) > 1:
-			# add an optional parameter to jump somewhere in the queue
 			m.print_with_timestamp(
 				f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
 				f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - SKIP > 1"
@@ -921,10 +916,10 @@ class Music(commands.Cog):
 			# truncate title and artist strings if they become too long
 			# don't expect this to center properly if the string contains
 			# fullwidth or CJK characters, e.g., Ｓ, す, ス, 糖, etc.
-			t = self.current_track.title
+			t = self.track_queue[0].title
 			title = f"{t[:42]}...".center(len(progress_bar)) \
 				if len(t) > 45 else t.center(len(progress_bar))
-			a = self.current_track.uploader
+			a = self.track_queue[0].uploader
 			artist = f"{a[:42]}...".center(len(progress_bar)) \
 				if len(a) > 45 else a.center(len(progress_bar))
 
