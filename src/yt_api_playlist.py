@@ -1,6 +1,7 @@
 import ctypes
 import os
 import sys
+import time
 
 import morefunc as m
 
@@ -27,12 +28,18 @@ if __name__ == "__main__":
 		dni = [] # do not include
 		dupe_del = [] # deleted, but currently in list
 		yt_ids_list = m.load_yt_id_file()
-		ctypes.windll.kernel32.SetConsoleTitleW("Add YouTube video IDs by playlist IDs")
+		ctypes.windll.kernel32.SetConsoleTitleW(
+			"Add YouTube video IDs by playlist IDs"
+		)
 
 		def get_ids_from_playlist(youtube, items, pl_id):
+			start = time.time()
 			global OVERALL
 			try:
-				print(f"{m.bcolors.WARNING}This might take a while...{m.bcolors.ENDC}")
+				print(
+					f"{m.bcolors.WARNING}This might take a while..."
+					f"{m.bcolors.ENDC}"
+				)
 				response1 = items.list(
 					part="snippet",
 					playlistId=pl_id,
@@ -75,13 +82,15 @@ if __name__ == "__main__":
 									f"(PRIVATE){m.bcolors.ENDC}"
 								)
 								print(display_str)
-								# because private videos may become public later?
+								# because private videos may become
+								# public later?
 								# dni.append(vid_id)
 							else:
 								display_str = (
 									f"{counter}. {m.bcolors.OKGREEN}{vid_id}"
 									f"{m.bcolors.ENDC} - {m.bcolors.OKBLUE}"
-									f"{pl_item['snippet']['title']}{m.bcolors.ENDC}"
+									f"{pl_item['snippet']['title']}"
+									f"{m.bcolors.ENDC}"
 								)
 								print(display_str)
 						else:
@@ -99,11 +108,15 @@ if __name__ == "__main__":
 								f"{m.bcolors.ENDC} {m.bcolors.OKCYAN}"
 								f"(DUPE){m.bcolors.ENDC}"
 							)
+							dni.append(vid_id)
 							if dupe_del_string in display_str:
 								dupe_del.append(vid_id)
 							print(display_str)
 						counter += 1
-						yield vid_id
+						if vid_id in dni:
+							continue
+						else:
+							yield vid_id
 					response1 = youtube.playlistItems().list_next(
 						response1,
 						pl_items_list_response
@@ -112,15 +125,18 @@ if __name__ == "__main__":
 				if dupe_del:
 					temp = ""
 					if len(dupe_del) == 1:
-						temp = f"({dupe_del[0]}\\n)"
+						temp = f"({dupe_del[0]}\\n?)"
 					else:
-						temp1 = "(" + "".join([f"{id}\\n|" for id in dupe_del])
+						temp1 = "(" + "".join([f"{id}\\n?|" for id in dupe_del])
 						temp = temp1[:-1] + ")"
 					print(f"\n{m.bcolors.WARNING}REMOVE THESE!{m.bcolors.ENDC}")
 					print(f"{m.bcolors.FAIL}{temp}{m.bcolors.ENDC}")
 				dupe_del.clear()
 			except Exception as e:
 				print(f"DETAILS:\n{e}")
+
+			end = time.time()
+			print(f"{m.bcolors.WARNING}Duration: {end - start}{m.bcolors.ENDC}")
 
 		input_pl = ""
 		while input_pl != "n":
@@ -139,9 +155,9 @@ if __name__ == "__main__":
 						os.system("cls" if os.name == "nt" else "clear")
 						csi = 1
 					print(
-						f"{m.bcolors.HEADER}"
-						f"Number of interactions before clear screen (up to 5):"
-						f" {m.bcolors.ENDC}{m.bcolors.FAIL}{csi}{m.bcolors.ENDC}"
+						f"{m.bcolors.HEADER}# of interactions before screen "
+						f"clears (max 5): {m.bcolors.ENDC}{m.bcolors.FAIL}"
+						f"{csi}{m.bcolors.ENDC}"
 					)
 					included_id_count = 0
 					pl = list(
@@ -150,22 +166,21 @@ if __name__ == "__main__":
 						)
 					)
 					print()
-					for vid_id in pl:
-						if vid_id not in yt_ids_list:
-							with open(
-								f"{m.dir_path}/ignore/yt_ids.txt", "a"
-							) as yt_id:
-								if vid_id not in dni:
-									yt_id.write(f"\n{vid_id}")
-									print(
-										f"{m.bcolors.WARNING}{m.ERASE_ABOVE}"
-										f"Processing{m.bcolors.ENDC} "
-										f"{m.bcolors.OKBLUE}{vid_id}"
-										f"{m.bcolors.ENDC}{m.bcolors.WARNING}, "
-										"DO NOT EXIT WINDOW UNTIL NEXT PROMPT!"
-										f"{m.bcolors.ENDC}"
-									)
-									included_id_count += 1 # maybe inaccurate
+					with open(
+						f"{m.dir_path}/ignore/yt_ids.txt", "a"
+					) as yt_ids_file:
+						for vid_id in pl:
+							if vid_id not in yt_ids_list:
+								yt_ids_file.write(f"\n{vid_id}")
+								print(
+									f"{m.bcolors.WARNING}{m.ERASE_ABOVE}"
+									f"Processing{m.bcolors.ENDC} "
+									f"{m.bcolors.OKBLUE}{vid_id}"
+									f"{m.bcolors.ENDC}{m.bcolors.WARNING}, "
+									"DO NOT EXIT WINDOW UNTIL NEXT PROMPT!"
+									f"{m.bcolors.ENDC}"
+								)
+								included_id_count += 1 # maybe inaccurate
 					print(
 						f"{m.bcolors.WARNING}{m.ERASE_ABOVE}"
 						f"Done! Number of IDs appended: "

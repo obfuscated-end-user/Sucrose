@@ -179,14 +179,14 @@ def process_ids():
 		regex = "(nothing to see here, don't remove anything)"
 		links = "1. [(9001) luM6oeCM7Yw](https://youtu.be/dQw4w9WgXcQ)"
 	elif del_len == 1:
-		regex = f"({del_ids[0][1]}\\n)"
+		regex = f"({del_ids[0][1]}\\n?)"
 		links = (
 			f"1. [({del_ids[0][0] + 1}) {del_ids[0][1]}]"
 			f"(https://youtu.be/{del_ids[0][1]}) **({del_ids[0][2]})**"
 		)
 	else:
 		for idx_in_list, (orig_idx, id, reason) in enumerate(sorted_del_ids):
-			regex = regex + f"{id}\\n|"
+			regex = regex + f"{id}\\n?|"
 			links += (
 				f"{idx_in_list + 1}. [({orig_idx + 1}) {id}]"
 				f"(https://youtu.be/{id}) **({reason})**\n"
