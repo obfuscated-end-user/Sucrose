@@ -147,7 +147,6 @@ class Basic(commands.Cog):
 		"""
 		Get random xkcd comic.
 		"""
-		# get the latest xkcd comic dynamically
 		async with aiohttp.ClientSession() as session:
 			# this returns the latest comic # for some reason
 			async with session.get("https://xkcd.com/info.0.json") as resp:
@@ -177,7 +176,6 @@ class Basic(commands.Cog):
 		)
 		embed.set_image(url=data["img"])
 		embed.set_footer(text="xkcd")
-		# delete_after=60
 		await ctx.respond(embed=embed)
 		m.print_with_timestamp(
 			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
@@ -210,7 +208,7 @@ class Basic(commands.Cog):
 		)
 
 
-	@bot.bridge_command(aliases=["fumofumo"])
+	@bot.bridge_command(aliases=["fumofumo", "funky"])
 	async def fumo(
 		self, 
 		ctx: discord.ext.bridge.context.BridgeApplicationContext
@@ -221,7 +219,15 @@ class Basic(commands.Cog):
 		fumo_path = f"{m.dir_path}/ignore/fumo"
 
 		images = [file for file in os.listdir(fumo_path)
-			if file.lower().endswith((".png", ".jpg", ".jpeg", ".gif", "webp"))]
+			if file.lower().endswith((
+				"png",
+				"jpg",
+				"jpeg",
+				"gif",
+				"webp",
+				"mp4"
+			))
+		]
 		
 		if not images:
 			await ctx.respond("ᗜ˰ᗜ NOT FUNKY")
@@ -234,6 +240,46 @@ class Basic(commands.Cog):
 		m.print_with_timestamp(
 			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
 			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - FUMO - {file.filename}"
+		)
+
+		await ctx.respond(file=file)
+
+
+	@bot.bridge_command(aliases=["offensive", "e"])
+	async def edgy(
+		self, 
+		ctx: discord.ext.bridge.context.BridgeApplicationContext
+	) -> None:
+		"""
+		# ⚠️ NSFW
+		Send something considered to be of poor taste.
+		"""
+		edgy_path = f"{m.dir_path}/ignore/edgy"
+
+		images = [file for file in os.listdir(edgy_path)
+			if file.lower().endswith((
+				"png",
+				"jpg",
+				"jpeg",
+				"gif",
+				"webp",
+				"mp4"
+			))
+		]
+		
+		if not images:
+			await ctx.respond(
+				"Can't send something like this in a Christian server."
+			)
+			return
+
+		edgy_img = random.choice(images)
+		file_path = os.path.join(edgy_path, edgy_img)
+		file = discord.File(file_path, filename=edgy_img)
+
+		m.print_with_timestamp(
+			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
+			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - EDGY - {file.filename}"
 		)
 
 		await ctx.respond(file=file)

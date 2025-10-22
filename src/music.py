@@ -409,7 +409,8 @@ class Music(commands.Cog):
 		ctx: discord.ext.bridge.context.BridgeApplicationContext
 	) -> None:
 		"""
-		(NSFW WARNING) Play a random audio track from YouTube.
+		# ⚠️ NSFW
+		Play a random audio track from YouTube.
 		Doesn't need to be music.
 		"""
 		vc = ctx.voice_client

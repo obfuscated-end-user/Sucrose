@@ -37,7 +37,8 @@ class Yt_Bot(commands.Cog):
 		ctx: discord.ext.bridge.context.BridgeApplicationContext
 	) -> None:
 		"""
-		(NSFW WARNING) Returns a random YouTube link.
+		# ⚠️ NSFW
+		Returns a random YouTube link.
 		May sometimes return deleted/privated/region-locked videos.
 		"""
 		start = time.time()
