@@ -191,7 +191,7 @@ if __name__ == "__main__":
 					yt_ids_list = m.load_yt_id_file()
 					input_pl = input(
 						f"{m.bcolors.OKBLUE}"
-						f"Enter a valid playlist URL/ID (type \"n\" to exit): "
+						f"Enter a valid playlist URL/ID (type \"n\" to exit):"
 						f" {m.bcolors.ENDC}"
 					)
 					match = search(m.YT_PLAYLIST_ID_REGEX, input_pl)
