@@ -191,7 +191,8 @@ class Basic(commands.Cog):
 		interval: int=10
 	) -> None:
 		"""
-		Pretends to send a very important announcement.
+		Pretends to send a very important announcement.  
+		*Does this even work?*
 		"""
 		repeat_interval = 5
 		elapsed = 0

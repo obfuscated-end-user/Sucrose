@@ -3,6 +3,7 @@ import ctypes
 import os
 import sys
 import time
+import winsound
 
 import aiohttp
 import morefunc as m
@@ -40,9 +41,9 @@ def process_ids():
 	while True:
 		try:
 			mode = int(input((
-				"Enter a mode:\n"
-				"1 - Specify a start and end and remove IDs within that range\n"
+				"1 - Specify a start and end, and remove IDs within that range\n"
 				"2 - Randomly remove IDs within a range\n"
+				"Enter a mode: "
 			)))
 			if (mode == 1):
 				print("Don't make the gap too large!")
@@ -150,8 +151,7 @@ def process_ids():
 		async with aiohttp.ClientSession(
 			connector=aiohttp.TCPConnector(limit=20)) as session:
 			print("Checking if IDs are available...\n")
-			t1 = [is_id_available(yid, session) 
-				for idx, yid in indexed_ids]
+			t1 = [is_id_available(yid, session) for idx, yid in indexed_ids]
 			r1 = await asyncio.gather(*t1)
 
 			print()
@@ -193,7 +193,7 @@ def process_ids():
 				f"(https://youtu.be/{id}) **({reason})**\n"
 			)
 		regex = regex[:-1] + ")"
-		print(regex)
+		# print(regex)
 
 	print(sorted_del_ids, del_len, "\n")
 
@@ -210,7 +210,13 @@ def process_ids():
 	end = time.time()
 	print(
 		f"Time taken (in seconds): {end - start}, "
-		f"range: {range_start} to {range_end}\nDone!"
+		f"range: {range_start} to {range_end}\nDone!\a"
+	)
+
+	ctypes.windll.user32.FlashWindow(
+		ctypes.windll.user32.GetParent(
+			ctypes.windll.kernel32.GetConsoleWindow()),
+		True
 	)
 
 	instance.stop()

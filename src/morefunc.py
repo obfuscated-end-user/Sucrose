@@ -99,7 +99,7 @@ def load_yt_id_file() -> list[str]:
 	Return a list containing YouTube video IDs.
 	"""
 	with open(f"{dir_path}/ignore/yt_ids.txt", "r") as f:
-		yt_ids = [id for [id] in [l.strip().split("\n") for l in f.readlines()]]
+		yt_ids = [l.strip().split("\n")[0] for l in f.readlines()]
 	return yt_ids
 
 
@@ -135,7 +135,7 @@ def find_dupes(mode: int) -> dict[str, list]:
 		if mode == 1:
 			print(ERASE_ABOVE, f"line {i}, id {item}")
 		dupes[item].append(i + 1)
-	dupes = {key:value for key,value in dupes.items() if len(value) > 1}
+	dupes = {key : value for key, value in dupes.items() if len(value) > 1}
 
 	for key, value in dupes.items():
 		print(f"{key}: {value}")
