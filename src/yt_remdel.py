@@ -3,7 +3,6 @@ import ctypes
 import os
 import sys
 import time
-import winsound
 
 import aiohttp
 import morefunc as m
@@ -220,6 +219,7 @@ def process_ids():
 	)
 
 	instance.stop()
+
 
 if __name__ == "__main__":
 	try:

@@ -27,13 +27,13 @@ if __name__ == "__main__":
 		)
 		dni = [] # do not include
 		dupe_del = [] # deleted, but currently in list
-		yt_ids_list = m.load_yt_id_file()
+		yt_ids_list = set(m.load_yt_id_file())
 		ctypes.windll.kernel32.SetConsoleTitleW(
 			"Add YouTube video IDs by playlist IDs"
 		)
 
 		def get_ids_from_playlist(youtube, items, pl_id):
-			start = time.time()
+			# start = time.time()
 			global OVERALL
 			try:
 				print(
@@ -66,6 +66,8 @@ if __name__ == "__main__":
 					pl_items_list_response = response1.execute()
 					for pl_item in pl_items_list_response["items"]:
 						vid_id = pl_item["snippet"]["resourceId"]["videoId"]
+						# any(x is y for y in l)
+						# f not any(vid_id is x for x in yt_ids_list):
 						if vid_id not in yt_ids_list:
 							if pl_item["snippet"]["title"] == "Deleted video":
 								display_str = (
@@ -135,11 +137,12 @@ if __name__ == "__main__":
 			except Exception as e:
 				print(f"DETAILS:\n{e}")
 
-			end = time.time()
-			print(f"{m.bcolors.WARNING}Duration: {end - start}{m.bcolors.ENDC}")
+			# end = time.time()
+			# print(f"{m.bcolors.WARNING}Duration: {end - start}{m.bcolors.ENDC}")
 
 		input_pl = ""
 		while input_pl != "n":
+			new_ids = []
 			csi = 1	# clear screen indicator
 			try:
 				items = yt.playlistItems()
@@ -151,6 +154,7 @@ if __name__ == "__main__":
 				print(m.ERASE_ABOVE.strip(), end="")
 				match = search(m.YT_PLAYLIST_ID_REGEX, input_pl)
 				while match is not None:
+					start = time.time()
 					if csi == 5:
 						os.system("cls" if os.name == "nt" else "clear")
 						csi = 1
@@ -166,34 +170,39 @@ if __name__ == "__main__":
 						)
 					)
 					print()
+					final_write_string = ""
+					for vid_id in pl:
+						if vid_id not in yt_ids_list:
+							new_ids.append(vid_id)
+							final_write_string += f"\n{vid_id}"
+							print(
+								f"{m.bcolors.WARNING}{m.ERASE_ABOVE}"
+								f"Processing{m.bcolors.ENDC} "
+								f"{m.bcolors.OKBLUE}{vid_id}"
+								f"{m.bcolors.ENDC}{m.bcolors.WARNING}, "
+								"DO NOT EXIT WINDOW UNTIL NEXT PROMPT!"
+								f"{m.bcolors.ENDC}"
+							)
+							included_id_count += 1 # maybe inaccurate
 					with open(
 						f"{m.dir_path}/ignore/yt_ids.txt", "a"
 					) as yt_ids_file:
-						for vid_id in pl:
-							if vid_id not in yt_ids_list:
-								yt_ids_file.write(f"\n{vid_id}")
-								print(
-									f"{m.bcolors.WARNING}{m.ERASE_ABOVE}"
-									f"Processing{m.bcolors.ENDC} "
-									f"{m.bcolors.OKBLUE}{vid_id}"
-									f"{m.bcolors.ENDC}{m.bcolors.WARNING}, "
-									"DO NOT EXIT WINDOW UNTIL NEXT PROMPT!"
-									f"{m.bcolors.ENDC}"
-								)
-								included_id_count += 1 # maybe inaccurate
+						yt_ids_file.write(final_write_string)
+					end = time.time()
 					print(
 						f"{m.bcolors.WARNING}{m.ERASE_ABOVE}"
 						f"Done! Number of IDs appended: "
 						f"{included_id_count}/{OVERALL} ("
 						f"{100 * float(included_id_count)/float(OVERALL):.2f}%)"
-						f"{m.bcolors.ENDC}"
+						f" ({end - start}s) {m.bcolors.ENDC}"
 					)
-					yt_ids_list = m.load_yt_id_file()
 					input_pl = input(
 						f"{m.bcolors.OKBLUE}"
 						f"Enter a valid playlist URL/ID (type \"n\" to exit):"
 						f" {m.bcolors.ENDC}"
 					)
+					# yt_ids_list = set(m.load_yt_id_file())
+					yt_ids_list.update(new_ids)
 					match = search(m.YT_PLAYLIST_ID_REGEX, input_pl)
 					csi += 1
 					OVERALL = 0
