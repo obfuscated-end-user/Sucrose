@@ -39,11 +39,13 @@ def process_ids():
 	range_start = "N/A"
 	while True:
 		try:
-			mode = int(input((
+			mode = int(input(
 				"1 - Specify a start and end, and remove IDs within that range\n"
 				"2 - Randomly remove IDs within a range\n"
-				"Enter a mode: "
-			)))
+				"3 - Same as mode 2, with automatic removal of those IDs from"
+				" the text file, and repeat until no IDs are found\n\nEnter a"
+				" mode: "
+			))
 			if (mode == 1):
 				print("Don't make the gap too large!")
 				range_start = int(input("From index: "))
@@ -58,11 +60,16 @@ def process_ids():
 					input("Enter an int (don't make it too large): ")
 				)
 				break
+			elif (mode == 3):
+				range_end = int(
+					input("Enter an int (don't make it too large): ")
+				)
+				break
 			elif (mode < 1):
 				# these too
 				lol = 1 / 0
 				break
-			elif (mode > 2):
+			elif (mode > 3):
 				lol = 1 / 0
 				break
 		except:
@@ -70,7 +77,7 @@ def process_ids():
 
 	if (mode == 1):
 		indexed_ids = indexed_ids[range_start:range_end]
-	elif (mode == 2):
+	elif (mode == 2 or mode == 3):
 		shuffle(indexed_ids)
 		indexed_ids = indexed_ids[:range_end]
 	del_ids = []
@@ -150,6 +157,7 @@ def process_ids():
 		async with aiohttp.ClientSession(
 			connector=aiohttp.TCPConnector(limit=20)) as session:
 			print("Checking if IDs are available...\n")
+			del_ids_temp.clear()
 			t1 = [is_id_available(yid, session) for idx, yid in indexed_ids]
 			r1 = await asyncio.gather(*t1)
 
@@ -169,7 +177,42 @@ def process_ids():
 					del_ids.append((idx, yid, indicator))
 
 	print("Please wait...")
-	asyncio.run(main())
+	if mode == 3:
+		# NOTE
+		# if you want to stop this while running, ALWAYS MAKE SURE that
+		# yt_ids.txt is NOT EMPTY before you press CTRL+C!
+		# you risk losing the ENTIRE FILE if you fail to do so!
+		# don't let incompetence take you over
+		while True:
+			del_ids.clear() 
+			asyncio.run(main())
+			print(del_ids[:20], len(del_ids))
+
+			if not del_ids:
+				break
+
+			# indexed_ids has (original_index, id)
+			ids_to_remove = set(yid for (_, yid, _) in del_ids)
+			yt_ids_full = [
+				yid for yid in yt_ids_full if yid not in ids_to_remove
+			]
+
+			# save updated list back to the file used by m.load_yt_id_file()
+			with open(
+				f"{m.dir_path}/ignore/yt_ids.txt", "w", encoding="utf-8"
+			) as f:
+				f.write("\n".join(yt_ids_full))
+				# f.rstrip("\n")
+
+			# reload indexed_ids for the next iteration
+			indexed_ids = list(enumerate(m.load_yt_id_file()))
+			shuffle(indexed_ids)
+			indexed_ids = indexed_ids[:range_end]
+
+			# yt_ids_full  = m.load_yt_id_file()
+			# indexed_ids = list(enumerate(yt_ids_full))
+	else:
+		asyncio.run(main())
 	regex = "("
 	links = ""
 	del_len = len(del_ids)
@@ -194,7 +237,7 @@ def process_ids():
 		regex = regex[:-1] + ")"
 		# print(regex)
 
-	print(sorted_del_ids, del_len, "\n")
+	print(sorted_del_ids[:20], del_len, "\n")
 
 	# use this for easy management
 	# https://addons.mozilla.org/en-US/firefox/addon/markdown-viewer-chrome
