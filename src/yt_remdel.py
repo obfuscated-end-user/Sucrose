@@ -31,7 +31,8 @@ def process_ids():
 
 	yt_ids_full  = m.load_yt_id_file()
 	# keep the old index from the text file just because i want to
-	indexed_ids = list(enumerate(yt_ids_full))
+	# indexed_ids = list(enumerate(yt_ids_full))
+	indexed_ids = list(enumerate(yt_ids_full))[1200000:5000000]
 
 	# change this variable if you get frequent timeouts
 	# don't use values >2000
@@ -183,6 +184,7 @@ def process_ids():
 		# yt_ids.txt is NOT EMPTY before you press CTRL+C!
 		# you risk losing the ENTIRE FILE if you fail to do so!
 		# don't let incompetence take you over
+		# 2025/11/02: use the YouTube API instead?
 		while True:
 			del_ids.clear() 
 			asyncio.run(main())
@@ -205,7 +207,8 @@ def process_ids():
 				# f.rstrip("\n")
 
 			# reload indexed_ids for the next iteration
-			indexed_ids = list(enumerate(m.load_yt_id_file()))
+			# indexed_ids = list(enumerate(m.load_yt_id_file()))
+			indexed_ids = list(enumerate(m.load_yt_id_file()))[1200000:5000000]
 			shuffle(indexed_ids)
 			indexed_ids = indexed_ids[:range_end]
 
