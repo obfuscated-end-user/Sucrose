@@ -32,7 +32,7 @@ def process_ids():
 	yt_ids_full  = m.load_yt_id_file()
 	# keep the old index from the text file just because i want to
 	# indexed_ids = list(enumerate(yt_ids_full))
-	indexed_ids = list(enumerate(yt_ids_full))[1200000:5000000]
+	indexed_ids = list(enumerate(yt_ids_full))[1_200_000:5_000_000]
 
 	# change this variable if you get frequent timeouts
 	# don't use values >2000
@@ -84,14 +84,14 @@ def process_ids():
 	del_ids = []
 
 	async def is_id_available(
-		id: str,
+		yid: str,
 		session: aiohttp.ClientSession
 	) -> tuple[bool, str]:
 		"""
 		Check if ID is available. Returns (True, indicator) if ID is not
 		available, (False, "") otherwise.
 		"""
-		video_url = f"https://www.youtube.com/watch?v={id}/"
+		video_url = m.yt_link_formats[2] + yid
 		async with session.get(
 			video_url,
 			headers=HEADERS
@@ -131,13 +131,13 @@ def process_ids():
 
 
 	async def is_id_private(
-		id: str,
+		yid: str,
 		session: aiohttp.ClientSession
 	) -> bool:
 		"""
 		Check if ID is private.
 		"""
-		video_url = f"https://www.youtube.com/watch?v={id}/"
+		video_url = m.yt_link_formats[2] + yid
 		async with session.get(
 			video_url,
 			headers=HEADERS
@@ -208,7 +208,7 @@ def process_ids():
 
 			# reload indexed_ids for the next iteration
 			# indexed_ids = list(enumerate(m.load_yt_id_file()))
-			indexed_ids = list(enumerate(m.load_yt_id_file()))[1200000:5000000]
+			indexed_ids = list(enumerate(m.load_yt_id_file()))[1_200_000:5_000_000]
 			shuffle(indexed_ids)
 			indexed_ids = indexed_ids[:range_end]
 
@@ -231,11 +231,11 @@ def process_ids():
 			f"(https://youtu.be/{del_ids[0][1]}) **({del_ids[0][2]})**"
 		)
 	else:
-		for idx_in_list, (orig_idx, id, reason) in enumerate(sorted_del_ids):
-			regex = regex + f"{id}\\n?|"
+		for idx_in_list, (orig_idx, yid, reason) in enumerate(sorted_del_ids):
+			regex = regex + f"{yid}\\n?|"
 			links += (
-				f"{idx_in_list + 1}. [({orig_idx + 1}) {id}]"
-				f"(https://youtu.be/{id}) **({reason})**\n"
+				f"{idx_in_list + 1}. [({orig_idx + 1}) {yid}]"
+				f"(https://youtu.be/{yid}) **({reason})**\n"
 			)
 		regex = regex[:-1] + ")"
 		# print(regex)

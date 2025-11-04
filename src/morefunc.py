@@ -15,7 +15,7 @@ load_dotenv()
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
-ERASE_ABOVE = "\033[1A\033[K" # https://en.wikipedia.org/wiki/ANSI_escape_code
+ERASE_ABOVE = "\033[1A\x1b[2K" # https://en.wikipedia.org/wiki/ANSI_escape_code
 SUCROSE_IMAGE = os.getenv("SUCROSE_IMAGE")
 YT_VIDEO_ID_REGEX = "^([A-Za-z0-9_\-]{11})$"
 YT_PLAYLIST_ID_REGEX = "([\w-]{41}|[\w-]{34}|[\w-]{24}|[\w-]{18})"
