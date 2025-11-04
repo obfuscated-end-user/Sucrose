@@ -211,9 +211,6 @@ def process_ids():
 			indexed_ids = list(enumerate(m.load_yt_id_file()))[1_200_000:5_000_000]
 			shuffle(indexed_ids)
 			indexed_ids = indexed_ids[:range_end]
-
-			# yt_ids_full  = m.load_yt_id_file()
-			# indexed_ids = list(enumerate(yt_ids_full))
 	else:
 		asyncio.run(main())
 	regex = "("
@@ -238,7 +235,6 @@ def process_ids():
 				f"(https://youtu.be/{yid}) **({reason})**\n"
 			)
 		regex = regex[:-1] + ")"
-		# print(regex)
 
 	print(sorted_del_ids[:20], del_len, "\n")
 
