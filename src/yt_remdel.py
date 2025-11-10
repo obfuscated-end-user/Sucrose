@@ -29,10 +29,12 @@ def process_ids():
 	# clear screen
 	os.system("cls" if os.name == "nt" else "clear")
 
+	TEMP_RANGE_START = 1_210_000
+	TEMP_RANGE_END = 4_980_000
 	yt_ids_full  = m.load_yt_id_file()
 	# keep the old index from the text file just because i want to
 	# indexed_ids = list(enumerate(yt_ids_full))
-	indexed_ids = list(enumerate(yt_ids_full))[1_200_000:5_000_000]
+	indexed_ids = list(enumerate(yt_ids_full))[TEMP_RANGE_START:TEMP_RANGE_END]
 
 	# change this variable if you get frequent timeouts
 	# don't use values >2000
@@ -99,7 +101,7 @@ def process_ids():
 			if video_response.status != 200:
 				return True, f"HTTP Status {video_response.status}"
 			text = await video_response.text()
-			print(id, m.ERASE_ABOVE.strip())
+			m.print_with_timestamp(f"{yid}{m.ERASE_ABOVE.strip()}")
 			# i know this could be made smaller, but having the exact string
 			# makes it more, i don't know, fool-proof? youtube doesn't prevent
 			# you on making your video title literally say "This video has been
@@ -145,7 +147,7 @@ def process_ids():
 			if video_response.status != 200:
 				return True
 			text = await video_response.text()
-			print(id, m.ERASE_ABOVE.strip())
+			m.print_with_timestamp(f"{yid}{m.ERASE_ABOVE.strip()}")
 			indicators = [
 				" private",	# note the space before "private"
 				"HTTP Status 500"
@@ -153,26 +155,25 @@ def process_ids():
 
 			return any(indicator not in text for indicator in indicators)
 
+
 	del_ids_temp = []
 	async def main() -> None:
 		async with aiohttp.ClientSession(
-			connector=aiohttp.TCPConnector(limit=20)) as session:
-			print("Checking if IDs are available...\n")
+			connector=aiohttp.TCPConnector(limit=50)) as session:
+			m.print_with_timestamp("Checking if IDs are available...")
 			del_ids_temp.clear()
 			t1 = [is_id_available(yid, session) for idx, yid in indexed_ids]
 			r1 = await asyncio.gather(*t1)
 
-			print()
 			for (idx, yid), (is_deleted, indicator) in zip(indexed_ids, r1):
 				if is_deleted:
 					del_ids_temp.append((idx, yid, indicator))
 
-			print("Checking if IDs are private...\n")
+			m.print_with_timestamp("Checking if IDs are private...")
 			t2 = [is_id_private(yid, session)
 				for idx, yid, indicator in del_ids_temp]
 			r2 = await asyncio.gather(*t2)
 
-			print()
 			for (idx, yid, indicator), is_deleted in zip(del_ids_temp, r2):
 				if is_deleted:
 					del_ids.append((idx, yid, indicator))
@@ -185,10 +186,16 @@ def process_ids():
 		# you risk losing the ENTIRE FILE if you fail to do so!
 		# don't let incompetence take you over
 		# 2025/11/02: use the YouTube API instead?
+		ids_removed = 0
 		while True:
 			del_ids.clear() 
 			asyncio.run(main())
-			print(del_ids[:20], len(del_ids))
+			ids_removed += len(del_ids)
+			m.print_with_timestamp(
+				f"{del_ids[:20]}\n"
+				f"REMOVED IN THIS BATCH: {len(del_ids)}\n"
+				f"TOTAL IDS REMOVED: {ids_removed}"
+			)
 
 			if not del_ids:
 				break
@@ -208,7 +215,7 @@ def process_ids():
 
 			# reload indexed_ids for the next iteration
 			# indexed_ids = list(enumerate(m.load_yt_id_file()))
-			indexed_ids = list(enumerate(m.load_yt_id_file()))[1_200_000:5_000_000]
+			indexed_ids = list(enumerate(m.load_yt_id_file()))[TEMP_RANGE_START:TEMP_RANGE_END]
 			shuffle(indexed_ids)
 			indexed_ids = indexed_ids[:range_end]
 	else:
