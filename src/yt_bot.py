@@ -55,14 +55,21 @@ class Yt_Bot(commands.Cog):
 		# view_count_temp = soup.select_one("meta[itemprop='interactionCount'][content]")["content"]
 		# 2025/04/01 - from "interactionCount" to "userInteractionCount"
 		# 2025/05/15 - view_count_temp = soup.find("meta", attrs={"itemprop":"userInteractionCount"})["content"]
-		view_count_temp = soup.find_all(
-			"meta", attrs={"itemprop":"userInteractionCount"})[1]["content"]
-		view_count = f"{int(view_count_temp):,}"
+		view_count = ""
+		# for some reason, there are sometimes two of these
+		try:
+			view_count_temp = soup.find_all(
+				"meta", attrs={"itemprop":"userInteractionCount"})[1]["content"]
+			view_count = f"{int(view_count_temp):,}"
+		except:
+			view_count_temp = soup.find_all(
+				"meta", attrs={"itemprop":"userInteractionCount"})[0]["content"]
+			view_count = f"{int(view_count_temp):,}"
 		uploader = soup.select_one(
 			"link[itemprop='name'][content]")["content"].replace("*", "\*")
 		title = soup.find_all(
 			name="title")[0].text.split(" - YouTube")[0].replace("*", "\*")
-	
+
 		# the dates will depend on your time zone
 		# for example, all dates returned by soup are one day ahead
 		# this reflects the fact that i'm a day ahead from where youtube is from

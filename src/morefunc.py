@@ -94,12 +94,12 @@ class SingleInstance:
 		self.thread.join()
 
 
-def load_yt_id_file() -> list[str]:
+def load_yt_id_file(path: str=f"{dir_path}/ignore/yt_ids.txt") -> list[str]:
 	"""
 	Return a list containing YouTube video IDs.
 	"""
-	with open(f"{dir_path}/ignore/yt_ids.txt", "r") as f:
-		yt_ids = [l.strip().split("\n")[0] for l in f.readlines()]
+	with open(path, "r") as f:
+		yt_ids = [l.split("\n")[0] for l in f.readlines()]
 	return yt_ids
 
 
