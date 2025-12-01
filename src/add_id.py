@@ -17,8 +17,29 @@ def generate_url() -> str:
 def add_id(id: str) -> None:
 	"""
 	Add an ID from the list of IDs.
+
+	**DO NOT** ADD THE FOLLOWING:
+	* IDs for videos that have been deleted, made private, or restricted to members only.
+	* Any IDs containing sensitive information or data that could identify or trace back to you.
+
+	**All other IDs are welcome for inclusion.**
+
+	IDs are formatted inside the text file as:
+	```
+	FtutLA63Cp8
+	rB7XFQgJHBI
+	19y8YTbvri8
+	yr3k-Ok9GE4
+	MAlSjtxy5ak
+	wtUMQZqI3x0
+	g6LoC9KUVtI
+	cN9Xhtb345w
+	uNl6Sh01ZIU
+	dQw4w9WgXcQ
+	...
+	```
+	It's up to you to find patterns in chaos.
 	"""
-	# It's up to you to find patterns in chaos.
 	if re.search(m.YT_VIDEO_ID_REGEX, id):
 		if id not in yt_ids_list:
 			with open(f"{m.dir_path}/ignore/yt_ids.txt", "a") as file:
