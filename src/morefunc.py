@@ -19,6 +19,7 @@ ERASE_ABOVE = "\033[1A\x1b[2K" # https://en.wikipedia.org/wiki/ANSI_escape_code
 SUCROSE_IMAGE = os.getenv("SUCROSE_IMAGE")
 YT_VIDEO_ID_REGEX = "^([A-Za-z0-9_\-]{11})$"
 YT_PLAYLIST_ID_REGEX = "([\w-]{41}|[\w-]{34}|[\w-]{24}|[\w-]{18})"
+YT_IDS_FILE_PATH = f"{dir_path}/ignore/yt_ids.txt"
 
 yt_link_formats = [
 	"https://www.youtube.com/watch?v=",
@@ -94,7 +95,7 @@ class SingleInstance:
 		self.thread.join()
 
 
-def load_yt_id_file(path: str=f"{dir_path}/ignore/yt_ids.txt") -> list[str]:
+def load_yt_id_file(path: str=YT_IDS_FILE_PATH) -> list[str]:
 	"""
 	Return a list containing YouTube video IDs.
 	"""
