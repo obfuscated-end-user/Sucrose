@@ -48,9 +48,9 @@ class Yt_Bot(commands.Cog):
 		now_user = time.time()
 		cooldown = 180
 
-		id = get_id()
+		yid = get_id()
 		# link = random.choice(yt_link_formats) + id # DO NOT USE
-		link = m.yt_link_formats[3] + id
+		link = m.yt_link_formats[3] + yid
 		soup = BeautifulSoup(requests.get(link).text, "html.parser") # "lxml" doesn't work
 		# view_count_temp = soup.select_one("meta[itemprop='interactionCount'][content]")["content"]
 		# 2025/04/01 - from "interactionCount" to "userInteractionCount"
@@ -93,8 +93,8 @@ class Yt_Bot(commands.Cog):
 			"If the embed does not show up, the video "
 			"may be deleted or set to private. "
 			"Alternatively, you can try viewing it "
-			f"[here](https://web.archive.org/web/https://www.youtube.com/watch?v={id}).\n"
-			f"Click [here](https://web.archive.org/save/https://www.youtube.com/shorts/{id})"
+			f"[here](https://web.archive.org/web/https://www.youtube.com/watch?v={yid}).\n"
+			f"Click [here](https://web.archive.org/save/https://www.youtube.com/shorts/{yid})"
 			" to save a copy to the Wayback Machine."
 			f"\n\nTitle: **{title}**\nUploader: **{uploader}**\nDate uploaded: "
 			f"**{date_uploaded} ({time_diff})**\nViews: **{view_count}**"
@@ -111,13 +111,13 @@ class Yt_Bot(commands.Cog):
 		else:
 			await ctx.respond(embed=make_embed(embed_string))
 	
-		await ctx.respond(f"[link]({link})")
+		await ctx.respond(f"[{yid}]({link})")
 		end = time.time()
 		m.print_with_timestamp(f"Time taken by s!yt: {end - start}")
 		m.print_with_timestamp(
 			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
 			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - YT - "
-			f"{id} {self.last_warning_time}"
+			f"{yid} {self.last_warning_time}"
 		)
 
 

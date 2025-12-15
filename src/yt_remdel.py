@@ -34,7 +34,7 @@ def process_ids():
 	yt_ids_full  = m.load_yt_id_file()
 	# keep the old index from the text file just because i want to
 	# indexed_ids = list(enumerate(yt_ids_full))
-	indexed_ids = list(enumerate(yt_ids_full))[TEMP_RANGE_START:TEMP_RANGE_END]
+	indexed_ids = list(enumerate(yt_ids_full))# [TEMP_RANGE_START:TEMP_RANGE_END]
 
 	# change this variable if you get frequent timeouts
 	# don't use values >2000
@@ -215,7 +215,7 @@ def process_ids():
 
 			# reload indexed_ids for the next iteration
 			# indexed_ids = list(enumerate(m.load_yt_id_file()))
-			indexed_ids = list(enumerate(m.load_yt_id_file()))[TEMP_RANGE_START:TEMP_RANGE_END]
+			indexed_ids = list(enumerate(m.load_yt_id_file()))# [TEMP_RANGE_START:TEMP_RANGE_END]
 			shuffle(indexed_ids)
 			indexed_ids = indexed_ids[:range_end]
 	else:

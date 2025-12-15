@@ -121,8 +121,9 @@ for cog in cogs:
 	bot.load_extension(cog)
 
 # makes the bot work
-try:
+bot.run(TOKEN)
+""" try:
 	bot.run(TOKEN)
 except KeyboardInterrupt:
-	asyncio.run(bot.close())
 	sys.exit()
+"""

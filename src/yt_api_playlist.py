@@ -1,5 +1,6 @@
 import ctypes
 import os
+import subprocess
 import sys
 import time
 
@@ -133,6 +134,9 @@ if __name__ == "__main__":
 						temp = temp1[:-1] + ")"
 					print(f"\n{m.bcolors.WARNING}REMOVE THESE!{m.bcolors.ENDC}")
 					print(f"{m.bcolors.FAIL}{temp}{m.bcolors.ENDC}")
+					# insert this to your clipboard
+					subprocess.run("clip", input=temp, check=True,
+						encoding="utf-8")
 				dupe_del.clear()
 			except Exception as e:
 				print(f"DETAILS:\n{e}")
@@ -201,7 +205,6 @@ if __name__ == "__main__":
 						f"Enter a valid playlist URL/ID (type \"n\" to exit):"
 						f" {m.bcolors.ENDC}"
 					)
-					# yt_ids_list = set(m.load_yt_id_file())
 					yt_ids_list.update(new_ids)
 					match = search(m.YT_PLAYLIST_ID_REGEX, input_pl)
 					csi += 1
