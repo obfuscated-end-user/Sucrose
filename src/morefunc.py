@@ -4,6 +4,7 @@ import random
 import re
 import requests
 import socket
+import subprocess
 import threading
 import time
 
@@ -95,13 +96,57 @@ class SingleInstance:
 		self.thread.join()
 
 
+def escape_no_space(text) -> str:
+	"""
+	`re.escape()` but leaves spaces unescaped.
+	"""
+	specials = r"()[]{}*+?|.^$\\"
+	return "".join("\\" + c if c in specials else c for c in text)
+
+
 def load_yt_id_file(path: str=YT_IDS_FILE_PATH) -> list[str]:
 	"""
 	Return a list containing YouTube video IDs.
 	"""
-	with open(path, "r") as f:
-		yt_ids = [l.split("\n")[0] for l in f.readlines()]
-	return yt_ids
+	video_id_pattern = re.compile(YT_VIDEO_ID_REGEX)
+
+	valid_ids = []
+	invalid_ids = []
+
+	# i used to do this w/o utf-8, but since any non-id can contain weird chars,
+	# better be safe
+	with open(path, "r", encoding="utf-8") as f:
+		for line_num, line in enumerate(f, 1):
+			id_candidate = line.strip()
+			if not id_candidate:
+				continue
+			if video_id_pattern.match(id_candidate):
+				valid_ids.append(id_candidate)
+			else:
+				invalid_ids.append((line_num, id_candidate))
+
+	if invalid_ids:
+		print(f"{bcolors.WARNING}Skipped {len(invalid_ids)} invalid IDs:{bcolors.ENDC}")
+		# because strings placed earlier in the list are replaced first, and
+		# that can render some strings invalid especially if they are shorter
+		# than the ones next to them
+		sorted_invalid = sorted(invalid_ids, key=lambda x: len(x[1]), reverse=True)
+		for line_num, invalid in sorted_invalid:
+			print(f"({line_num}) {bcolors.FAIL}{(invalid[:75] + '...') if len(invalid) > 75 else invalid}{bcolors.ENDC}")
+
+		invalid_id_list = sorted([id_ for _, id_ in invalid_ids], key=len, reverse=True)
+		temp = f"(^{escape_no_space(invalid_id_list[0])}\\n?$)" if len(invalid_id_list) == 1 \
+			else "(" + "".join([f"^{escape_no_space(yid)}\\n?$|" for yid in invalid_id_list])[:-1] + ")\n"
+
+		print(f"{bcolors.WARNING}REMOVE THESE!{bcolors.ENDC}")
+		print(f"{bcolors.FAIL}{temp}")
+		print(f"if that doesn't work, try: ^(?!.{{11}}$).*\\n{bcolors.ENDC}")
+		# https://stackoverflow.com/questions/73545218/utf-8-encoding-exception-with-subprocess-run
+		# japanese characters such as あ appear garbled when pasted
+		# the solution from the link doesn't work for me so for the mean time, this is still broken
+		subprocess.run("clip", input=temp, check=True, encoding="utf-8")
+
+	return valid_ids
 
 
 def is_id_available(
