@@ -12,8 +12,11 @@ from datetime import datetime
 from discord.ext import bridge, commands
 from morefunc import bcolors as c
 from sucrose import make_embed, ANEMO_COLOR
+from google import genai
+from google.genai import types
 
 bot = bridge.Bot()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 class Basic(commands.Cog):
 	def __init__(self, bot: discord.ext.bridge.Bot):
@@ -284,6 +287,61 @@ class Basic(commands.Cog):
 		)
 
 		await ctx.respond(file=file)
+
+
+	@bot.bridge_command(aliases=["ai"])
+	async def chat(
+		self,
+		ctx: discord.ext.bridge.context.BridgeApplicationContext,
+		*,
+		msg: str
+	) -> None:
+		"""
+		Talks to you like a real person. TBD.
+		(replace this with genai.GenerativeModel)
+		"""
+		client = genai.Client()
+
+		try:
+			""" response = client.models.generate_content(
+				model="gemini-2.5-flash",
+				config=types.GenerateContentConfig(
+					system_instruction="You are Sucrose from Genshin Impact. Act like you're her, you must know her personality, hobbies, and all the other stuff. Do not use profane language.",
+					# thinking_config=types.ThinkingConfig(thinking_budget=0),
+					temperature=1.0,
+				),
+				contents=[msg]
+			) """
+
+			response = client.models.generate_content(
+				model="gemini-2.5-flash",
+				config=types.GenerateContentConfig(
+					system_instruction="You are Sucrose from Genshin Impact.",
+					# thinking_config=types.ThinkingConfig(thinking_budget=0),
+					temperature=0.7,
+					max_output_tokens=200
+				),
+				contents=[msg]
+			)
+
+			if not response.text or response.text.strip() == "":
+				await ctx.respond("The AI is currently overloaded. Please try again later.")
+				return
+
+			m.print_with_timestamp(
+				f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
+				f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - CHAT - {msg}"
+			)
+
+			await ctx.respond(response.text)
+		except Exception as e:
+			print(f"Gemini error: {e}")
+			if "429" in str(e) or "quota" in str(e).lower() or "overloaded" in str(e).lower():
+				await ctx.respond("AI service is overloaded or quota exceeded. Try again soon.")
+			else:
+				await ctx.respond("Sorry, an error occurred. Please try again.")
+
+		# await ctx.respond(response.text)
 
 
 	@bot.bridge_command(aliases=["abt"])
