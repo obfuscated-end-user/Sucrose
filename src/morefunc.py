@@ -126,15 +126,24 @@ def load_yt_id_file(path: str=YT_IDS_FILE_PATH) -> list[str]:
 				invalid_ids.append((line_num, id_candidate))
 
 	if invalid_ids:
-		print(f"{bcolors.WARNING}Skipped {len(invalid_ids)} invalid IDs:{bcolors.ENDC}")
+		print(
+			f"{bcolors.WARNING}Skipped {len(invalid_ids)} "
+			f"invalid IDs:{bcolors.ENDC}"
+		)
 		# because strings placed earlier in the list are replaced first, and
 		# that can render some strings invalid especially if they are shorter
 		# than the ones next to them
-		sorted_invalid = sorted(invalid_ids, key=lambda x: len(x[1]), reverse=True)
+		sorted_invalid = sorted(
+			invalid_ids, key=lambda x: len(x[1]), reverse=True)
 		for line_num, invalid in sorted_invalid:
-			print(f"({line_num}) {bcolors.FAIL}{(invalid[:75] + '...') if len(invalid) > 75 else invalid}{bcolors.ENDC}")
+			print(
+				f"({line_num}) {bcolors.FAIL}"
+				f"{(invalid[:75] + '...') if len(invalid) > 75 else invalid}"
+				f"{bcolors.ENDC}"
+			)
 
-		invalid_id_list = sorted([id_ for _, id_ in invalid_ids], key=len, reverse=True)
+		invalid_id_list = sorted(
+			[id_ for _, id_ in invalid_ids], key=len, reverse=True)
 		temp = f"(^{escape_no_space(invalid_id_list[0])}\\n?$)" if len(invalid_id_list) == 1 \
 			else "(" + "".join([f"^{escape_no_space(yid)}\\n?$|" for yid in invalid_id_list])[:-1] + ")\n"
 

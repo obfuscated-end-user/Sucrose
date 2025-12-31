@@ -1,6 +1,7 @@
 # uses pycord
 import aiohttp
 import asyncio
+import json
 import os
 import random
 
@@ -12,15 +13,16 @@ from datetime import datetime
 from discord.ext import bridge, commands
 from morefunc import bcolors as c
 from sucrose import make_embed, ANEMO_COLOR
-from google import genai
-from google.genai import types
 
-bot = bridge.Bot()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+intents = discord.Intents.default()
+intents.members = True  # this enables guild.members
+bot = bridge.Bot(intents=intents)
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 class Basic(commands.Cog):
 	def __init__(self, bot: discord.ext.bridge.Bot):
 		self.bot = bot
+		self.conversations = {}  # {conv_key: [{"role": "user/assistant", "content": "..."}]}
 
 	@bot.bridge_command()
 	async def hello(
@@ -297,51 +299,85 @@ class Basic(commands.Cog):
 		msg: str
 	) -> None:
 		"""
-		Talks to you like a real person. TBD.
-		(replace this with genai.GenerativeModel)
+		Talks to you like a real person. May give wrong answers.
 		"""
-		client = genai.Client()
+		await ctx.defer()
+		guild_id = ctx.guild.id
+		user_id = ctx.author.id
+		conv_key = (guild_id, user_id)
 
-		try:
-			""" response = client.models.generate_content(
-				model="gemini-2.5-flash",
-				config=types.GenerateContentConfig(
-					system_instruction="You are Sucrose from Genshin Impact. Act like you're her, you must know her personality, hobbies, and all the other stuff. Do not use profane language.",
-					# thinking_config=types.ThinkingConfig(thinking_budget=0),
-					temperature=1.0,
-				),
-				contents=[msg]
-			) """
+		if conv_key not in self.conversations:
+			self.conversations[conv_key] = []
+		self.conversations[conv_key].append({"role": "user", "content": msg})
+		if len(self.conversations[conv_key]) > 12:	# 6 excahnges
+			self.conversations[conv_key] = self.conversations[conv_key][-12:]
 
-			response = client.models.generate_content(
-				model="gemini-2.5-flash",
-				config=types.GenerateContentConfig(
-					system_instruction="You are Sucrose from Genshin Impact.",
-					# thinking_config=types.ThinkingConfig(thinking_budget=0),
-					temperature=0.7,
-					max_output_tokens=200
-				),
-				contents=[msg]
+		guild_name = ctx.guild.name if ctx.guild else "Direct Messages"
+		channel_name = ctx.channel.name if ctx.channel else "private chat"
+		username = ctx.author.display_name
+		members = ctx.guild.members
+		member_count = ctx.guild.member_count
+		online_count = len([m for m in ctx.guild.members if not m.bot and m.status == discord.Status.online])
+		bots_count = len([m for m in ctx.guild.members if m.bot])
+		current_date = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+
+		content_string = (
+			"You are Sucrose from Genshin Impact. Shy, curious bio-alchemy expert. Keep responses short and informative. Don't wrap words in asterisks (ex. *adjusts glasses*), only do that if relevant. Don't hesitate to answer questions out of your scope!\n\n"
+			f"Current context:\n"
+			f"- Discord server: {guild_name}\n"
+			f"- Channel: {channel_name}\n"
+			f"- Talking to: {username}\n"
+			f"- Server has {member_count} members, {online_count} online, {bots_count} bots\n"
+			f"- Member names: {', '.join([m.display_name for m in members])}"
+			f"- Date: {current_date}\nDo not mention this 'context', pretend this is something you just know and not a prompt I gave you before initialization."
+		)
+
+		# if you're replying to someone
+		if ctx.message.reference is not None:
+			reply_ctx = await ctx.fetch_message(ctx.message.reference.message_id)
+			content_string += (
+				f"\nReplying to: {reply_ctx.author}"
+				f"\nMessage: {reply_ctx.content}"
 			)
 
-			if not response.text or response.text.strip() == "":
-				await ctx.respond("The AI is currently overloaded. Please try again later.")
-				return
-
-			m.print_with_timestamp(
-				f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
-				f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - CHAT - {msg}"
-			)
-
-			await ctx.respond(response.text)
-		except Exception as e:
-			print(f"Gemini error: {e}")
-			if "429" in str(e) or "quota" in str(e).lower() or "overloaded" in str(e).lower():
-				await ctx.respond("AI service is overloaded or quota exceeded. Try again soon.")
-			else:
-				await ctx.respond("Sorry, an error occurred. Please try again.")
-
-		# await ctx.respond(response.text)
+		async with aiohttp.ClientSession() as session:
+			async with session.post(
+				"https://openrouter.ai/api/v1/chat/completions",
+				headers={
+					"Authorization": f"Bearer {OPENROUTER_API_KEY}",
+					"Content-Type": "application/json"
+				},
+				json={
+					# "meta-llama/llama-3.2-1b-instruct:free"
+					"model": "mistralai/devstral-2512:free",
+					"messages": [
+						{
+							"role": "system",
+							"content": content_string
+						},
+						*self.conversations[conv_key] # user's past messages
+					],
+					"temperature": 0.7,
+					# don't make this value any higher to avoid hitting discord
+					# char limit
+					"max_tokens": 200
+				}
+			) as resp:
+				m.print_with_timestamp(
+					f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
+					f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - CHAT - {msg}"
+				)
+				if resp.status != 200:
+					await ctx.respond(
+						"Something went wrong and I didn't catch that... Let "
+						f"me check my alchemy notes!\nSTATUS: {resp.status}"
+					)
+					return
+				data = await resp.json()
+				response_text = data["choices"][0]["message"]["content"].strip()
+				self.conversations[conv_key].append(
+					{"role": "assistant", "content": response_text})
+				await ctx.respond(response_text)
 
 
 	@bot.bridge_command(aliases=["abt"])
