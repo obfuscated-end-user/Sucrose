@@ -10,6 +10,7 @@ Run from here, don't run the other files.
 """
 
 import asyncio
+import datetime
 import os
 import random
 import sys
@@ -102,8 +103,10 @@ async def change_status_task() -> None:
 		discord.Status.idle,
 		discord.Status.online
 	]
-	game_name = random.choice(sucrose_dict.activity_names)
+	today = datetime.date.today()
+	game_name = m.check_date(today, random.choice(sucrose_dict.activity_names))
 	discord_status = random.choice(discord_statuses)
+
 	await bot.change_presence(
 		activity=discord.Game(name=game_name),
 		status=discord_status

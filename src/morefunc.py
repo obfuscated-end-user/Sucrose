@@ -281,6 +281,24 @@ def escape_markdown(text: str) -> str:
 	return escaped_text
 
 
+def append_emoji(emoji: str, name: str) -> str:
+	"""Append an emoji to a string."""
+	return f"{emoji} {name() if callable(name) else name}"
+
+
+def check_date(date: datetime.date, name: str) -> str:
+	"""Check if date matches a special occasion."""
+	md = (date.month, date.day)
+	if md in [(12, 31), (1, 1)]:
+		return append_emoji("🎉", name)
+	if md in [(12, 24), (12, 25)]:
+		return append_emoji("🎄", name)
+	if md in [(1, 32)]: # fake debug date
+		return append_emoji("🧀", name)
+
+	return name() if callable(name) else name
+
+
 if __name__ == "__main__":
 	print("This file is only meant to be imported, not run directly.")
 	input("(press Enter to exit) ")

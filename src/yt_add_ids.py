@@ -301,8 +301,7 @@ if __name__ == "__main__":
 								f"{m.bcolors.ENDC} {m.bcolors.UNDERLINE}"
 								f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC}"
 								f"{m.bcolors.OKGREEN} ("
-								f"{yt_ids_index.get(yid)}"
-								f") added.{m.bcolors.ENDC}"
+								f"{yt_ids_index.get(yid)}){m.bcolors.ENDC}"
 							)
 						else:
 							if not yt_ids_index.get(yid):
@@ -313,23 +312,17 @@ if __name__ == "__main__":
 								f"{datetime.now().strftime(m.DATE_FORMAT)}"
 								f"{m.bcolors.ENDC} {m.bcolors.UNDERLINE}"
 								f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC}"
-								f"{m.bcolors.WARNING} already exists at "
-								f"line {yt_ids_index.get(yid)}.{m.bcolors.ENDC}"
+								f"{m.bcolors.WARNING} exists at line "
+								f"{yt_ids_index.get(yid)}.{m.bcolors.ENDC}"
 							)
-
 						continue
-
-				print(
-					f"{m.bcolors.FAIL}Invalid input. Please enter a valid "
-					f"YouTube video ID/link or playlist.{m.bcolors.ENDC}"
-				)
 
 			except KeyboardInterrupt:
 				print(f"\n{m.bcolors.WARNING}Interrupted.{m.bcolors.ENDC}")
 				continue_input = "n"
 			except Exception as e:
 				print(f"{m.bcolors.FAIL}Error: {e}{m.bcolors.ENDC}")
-				continue_input = input("Continue? (n to exit): ").lower()
+				# continue_input = input("Continue? (n to exit): ").lower()
 
 		instance.stop()
 
