@@ -73,6 +73,8 @@ if __name__ == "__main__":
 
 		print(f"{m.bcolors.WARNING}Processing IDs list...")
 		yt_ids_list = set(m.load_yt_id_file())
+		# do not add
+		dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
 		print(m.ERASE_ABOVE.strip(), end="")
 		print("Processing indices...")
 		yt_ids_index = load_yt_ids_with_lines(f"{m.dir_path}/ignore/yt_ids.txt")
@@ -170,6 +172,16 @@ if __name__ == "__main__":
 									f"(PRIVATE){m.bcolors.ENDC}"
 									f" {m.bcolors.OKCYAN}"
 									f"({yt_ids_index.get(yid)}){m.bcolors.ENDC}"
+								)
+								print(display_str)
+							elif yid in dna: # do not add this id if in dna set
+								display_str = (
+									f"{counter} {m.bcolors.FAIL}{yid}"
+									f"{m.bcolors.ENDC} {m.bcolors.FAIL}"
+									f"{pl_item['snippet']['title']}"
+									f"{m.bcolors.ENDC}"
+									f" {m.bcolors.FAIL}"
+									f"(IN DO NOT ADD LIST){m.bcolors.ENDC}"
 								)
 								print(display_str)
 							else:
@@ -279,7 +291,6 @@ if __name__ == "__main__":
 						f"{100 * float(included_id_count)/float(OVERALL):.2f}%)"
 						f" ({end - start}s){m.bcolors.ENDC}"
 					)
-					
 					continue
 
 				# check for video ID
@@ -287,7 +298,16 @@ if __name__ == "__main__":
 				if video_match:
 					yid = video_match.group(1)
 					if re.match(m.YT_VIDEO_ID_REGEX, yid):
-						if yid not in yt_ids_list:
+						if yid in dna:
+							print(
+								f"{m.bcolors.HEADER}"
+								f"{datetime.now().strftime(m.DATE_FORMAT)}"
+								f"{m.bcolors.ENDC} {m.bcolors.UNDERLINE}"
+								f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC}"
+								f"{m.bcolors.WARNING} exists in dna.txt."
+								f"{m.bcolors.ENDC}"
+							)
+						elif yid not in yt_ids_list:
 							with open(
 								f"{m.dir_path}/ignore/yt_ids.txt", "a"
 							) as f:

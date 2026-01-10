@@ -147,6 +147,7 @@ def load_yt_id_file(path: str=YT_IDS_FILE_PATH) -> list[str]:
 		temp = f"(^{escape_no_space(invalid_id_list[0])}\\n?$)" if len(invalid_id_list) == 1 \
 			else "(" + "".join([f"^{escape_no_space(yid)}\\n?$|" for yid in invalid_id_list])[:-1] + ")\n"
 
+		# if path == YT_IDS_FILE_PATH:
 		print(f"{bcolors.WARNING}REMOVE THESE!{bcolors.ENDC}")
 		print(f"{bcolors.FAIL}{temp}")
 		print(f"if that doesn't work, try: ^(?!.{{11}}$).*\\n{bcolors.ENDC}")
