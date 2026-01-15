@@ -73,7 +73,8 @@ if __name__ == "__main__":
 
 		print(f"{m.bcolors.WARNING}Processing IDs list...")
 		yt_ids_list = set(m.load_yt_id_file())
-		# do not add
+		# do not add list, most of these are member-restricted videos, videos
+		# that contain personally identifiable information, etc.
 		dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
 		print(m.ERASE_ABOVE.strip(), end="")
 		print("Processing indices...")
@@ -113,6 +114,7 @@ if __name__ == "__main__":
 			global OVERALL
 			global yt_ids_index
 			global yt_ids_list
+			global dna
 			if not assert_id_list_length():
 				print(
 					f"{m.bcolors.WARNING}Changes detected in yt_ids.txt, "
@@ -121,12 +123,12 @@ if __name__ == "__main__":
 				yt_ids_list = set(m.load_yt_id_file())
 				yt_ids_index = load_yt_ids_with_lines(
 					f"{m.dir_path}/ignore/yt_ids.txt")
+				dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
 			try:
 				print(
 					f"{m.bcolors.WARNING}This might take a while..."
 					f"{m.bcolors.ENDC}"
 				)
-				
 				# get playlist title
 				request = youtube.playlists().list(
 					part="snippet",
@@ -150,6 +152,7 @@ if __name__ == "__main__":
 				counter = 1
 				dni = []		# do not include
 				dupe_del = []	# deleted but currently in list
+				dna_string = ""
 
 				while response1:
 					pl_response = response1.execute()
@@ -164,6 +167,9 @@ if __name__ == "__main__":
 								)
 								print(display_str)
 								dni.append(yid)
+								if yid not in dna:
+									dna.add(yid)
+									dna_string += f"\n{yid}"
 							elif pl_item["snippet"]["title"] == "Private video":
 								yt_ids_index[yid] = len(yt_ids_index) + 1
 								display_str = (
@@ -179,9 +185,8 @@ if __name__ == "__main__":
 									f"{counter} {m.bcolors.FAIL}{yid}"
 									f"{m.bcolors.ENDC} {m.bcolors.FAIL}"
 									f"{pl_item['snippet']['title']}"
-									f"{m.bcolors.ENDC}"
-									f" {m.bcolors.FAIL}"
-									f"(IN DO NOT ADD LIST){m.bcolors.ENDC}"
+									f"{m.bcolors.ENDC} {m.bcolors.FAIL}"
+									f"(SKIPPED){m.bcolors.ENDC}"
 								)
 								print(display_str)
 							else:
@@ -222,6 +227,10 @@ if __name__ == "__main__":
 					OVERALL = counter - 1
 
 				if dupe_del:
+					for yid in dupe_del:
+						if yid not in dna:
+							dna_string += f"\n{yid}"
+							dna.add(yid)
 					temp = f"({dupe_del[0]}\\n?)" if len(dupe_del) == 1 \
 						else "(" + "".join(
 							[f"{id}\\n?|" for id in dupe_del])[:-1] + ")"
@@ -229,6 +238,12 @@ if __name__ == "__main__":
 					print(f"{m.bcolors.FAIL}{temp}{m.bcolors.ENDC}\n")
 					subprocess.run(
 						"clip", input=temp, check=True, encoding="utf-8")
+
+				if dna_string:
+					with open(f"{m.dir_path}/ignore/dna.txt", "a") as f:
+						f.write(dna_string)
+					dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
+				# dna_string = ""
 			except Exception as e:
 				print(f"DETAILS:\n{e}")
 
@@ -237,7 +252,6 @@ if __name__ == "__main__":
 		OVERALL = 0
 		csi = 1
 		while continue_input != "n":
-			# print() # don't remove
 			input_str = input(
 				f"{m.bcolors.HEADER}{datetime.now().strftime(m.DATE_FORMAT)}"
 				f"{m.bcolors.ENDC} "
@@ -303,9 +317,8 @@ if __name__ == "__main__":
 								f"{m.bcolors.HEADER}"
 								f"{datetime.now().strftime(m.DATE_FORMAT)}"
 								f"{m.bcolors.ENDC} {m.bcolors.UNDERLINE}"
-								f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC}"
-								f"{m.bcolors.WARNING} exists in dna.txt."
-								f"{m.bcolors.ENDC}"
+								f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC} "
+								f"{m.bcolors.WARNING}(skipped){m.bcolors.ENDC}"
 							)
 						elif yid not in yt_ids_list:
 							with open(
