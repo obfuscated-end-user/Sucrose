@@ -12,7 +12,7 @@ from re import search
 from datetime import datetime
 from collections import deque
 import ctypes
-import shutil
+# import shutil
 
 if __name__ == "__main__":
 	try:
@@ -87,6 +87,14 @@ if __name__ == "__main__":
 			f"{len(yt_ids_list):,} IDs - {deep_getsizeof(yt_ids_list):,} "
 			"bytes in memory loaded."
 		)
+		dna_remove = [yid for yid in yt_ids_list if yid in dna]
+		dna_remove_str = f"({dna_remove[0]}\\n?)" if len(dna_remove) == 1 \
+			else "(" + "".join(
+				[f"{yid}\\n?|" for yid in dna_remove])[:-1] + ")"
+		if dna_remove_str != "()":
+			print(f"\n{m.bcolors.WARNING}REMOVE THESE!{m.bcolors.ENDC}")
+			print(f"{m.bcolors.FAIL}{dna_remove_str}{m.bcolors.ENDC}\n")
+			subprocess.run("clip", input=dna_remove_str, check=True, encoding="utf-8")
 		end = time.time()
 		print(f"Done! Time taken to analyze IDs: {end - start}{m.bcolors.ENDC}")
 		print(
@@ -233,7 +241,7 @@ if __name__ == "__main__":
 							dna.add(yid)
 					temp = f"({dupe_del[0]}\\n?)" if len(dupe_del) == 1 \
 						else "(" + "".join(
-							[f"{id}\\n?|" for id in dupe_del])[:-1] + ")"
+							[f"{yid}\\n?|" for yid in dupe_del])[:-1] + ")"
 					print(f"\n{m.bcolors.WARNING}REMOVE THESE!{m.bcolors.ENDC}")
 					print(f"{m.bcolors.FAIL}{temp}{m.bcolors.ENDC}\n")
 					subprocess.run(
@@ -257,6 +265,14 @@ if __name__ == "__main__":
 				f"{m.bcolors.ENDC} "
 			)
 			input_str = re.sub("(&pp|\?si)=[\w%].*", "", input_str)
+			# skip these because they appear often enough when you do it
+			social_domains = [
+				"facebook.com", "instagram.com", "tiktok.com", "reddit.com",
+				"fandom.com"
+			]
+			if any(domain in input_str.lower() for domain in social_domains):
+				print(m.ERASE_ABOVE.strip(), end="")
+				continue
 			if input_str.replace("/", "").rstrip().lower() == "n":
 				break
 			try:
@@ -345,7 +361,7 @@ if __name__ == "__main__":
 								f"{datetime.now().strftime(m.DATE_FORMAT)}"
 								f"{m.bcolors.ENDC} {m.bcolors.UNDERLINE}"
 								f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC}"
-								f"{m.bcolors.WARNING} exists at line "
+								f"{m.bcolors.WARNING} already at line "
 								f"{yt_ids_index.get(yid)}.{m.bcolors.ENDC}"
 							)
 						continue
@@ -355,7 +371,6 @@ if __name__ == "__main__":
 				continue_input = "n"
 			except Exception as e:
 				print(f"{m.bcolors.FAIL}Error: {e}{m.bcolors.ENDC}")
-				# continue_input = input("Continue? (n to exit): ").lower()
 
 		instance.stop()
 
