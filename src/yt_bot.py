@@ -40,6 +40,7 @@ class Yt_Bot(commands.Cog):
 		# ⚠️ NSFW
 		Returns a random YouTube link.
 		May sometimes return deleted/privated/region-locked videos.
+		Most YouTube videos are just like ...that.
 		"""
 		start = time.time()
 		await ctx.defer()

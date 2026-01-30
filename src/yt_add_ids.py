@@ -8,11 +8,9 @@ from collections import OrderedDict
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 import morefunc as m
-from re import search
 from datetime import datetime
 from collections import deque
 import ctypes
-# import shutil
 
 if __name__ == "__main__":
 	try:
@@ -118,26 +116,60 @@ if __name__ == "__main__":
 			return len(yt_ids_list) == num_lines
 
 
+		def process_video_item(yid, pl_item, counter, yt_ids_list, yt_ids_index, dna):
+			"""Process single video item and return status dict"""
+			if yid not in yt_ids_list:
+				if pl_item["snippet"]["title"] == "Deleted video":
+					return {
+						"display": f"{counter} {m.bcolors.FAIL}{yid}{m.bcolors.ENDC} {m.bcolors.FAIL}(DELETED){m.bcolors.ENDC}",
+						"action": "dni"
+					}
+				elif pl_item["snippet"]["title"] == "Private video":
+					yt_ids_index[yid] = len(yt_ids_index) + 1
+					return {
+						"display": f"{counter} {m.bcolors.WARNING}{yid}{m.bcolors.ENDC} {m.bcolors.WARNING}(PRIVATE){m.bcolors.ENDC} {m.bcolors.OKCYAN}({yt_ids_index[yid]}){m.bcolors.ENDC}",
+						"action": "yield" # this used to be "index" and i was like why tf it doesn't work
+					}
+				elif yid in dna:
+					return {
+						"display": f"{counter} {m.bcolors.FAIL}{yid}{m.bcolors.ENDC} {m.bcolors.FAIL}{pl_item['snippet']['title']}{m.bcolors.ENDC} {m.bcolors.FAIL}(SKIPPED){m.bcolors.ENDC}",
+						"action": "skip"
+					}
+				else:
+					yt_ids_index[yid] = len(yt_ids_index) + 1
+					return {
+						"display": f"{counter} {m.bcolors.OKGREEN}{yid}{m.bcolors.ENDC} {m.bcolors.OKBLUE}{pl_item['snippet']['title']}{m.bcolors.ENDC} {m.bcolors.OKCYAN}({yt_ids_index[yid]}){m.bcolors.ENDC}",
+						"action": "yield"
+					}
+			else:
+				display_str = f"{counter} {m.bcolors.FAIL}{yid}{m.bcolors.ENDC} {m.bcolors.HEADER}{pl_item['snippet']['title']}{m.bcolors.ENDC} {m.bcolors.WARNING}({yt_ids_index.get(yid)}){m.bcolors.ENDC}"
+				dupe_del_string = f"{m.bcolors.HEADER}Deleted video{m.bcolors.ENDC} {m.bcolors.WARNING}("
+				if dupe_del_string in display_str:
+					global dupe_del
+					if "dupe_del" not in globals():
+						dupe_del = []
+					dupe_del.append(yid)
+				return {"display": display_str, "action": "dni"}
+
+
+		def print_batch(batch):
+			"""Print batch of status lines at once"""
+			print("\n".join([item["display"] for item in batch]))
+
+
 		def get_ids_from_playlist(youtube, items, pl_id):
 			global OVERALL
 			global yt_ids_index
 			global yt_ids_list
 			global dna
+			global dupe_del
 			if not assert_id_list_length():
-				print(
-					f"{m.bcolors.WARNING}Changes detected in yt_ids.txt, "
-					f"reloading...{m.bcolors.ENDC}"
-				)
+				print(f"{m.bcolors.WARNING}Changes detected in yt_ids.txt, reloading...{m.bcolors.ENDC}")
 				yt_ids_list = set(m.load_yt_id_file())
-				yt_ids_index = load_yt_ids_with_lines(
-					f"{m.dir_path}/ignore/yt_ids.txt")
+				yt_ids_index = load_yt_ids_with_lines(f"{m.dir_path}/ignore/yt_ids.txt")
 				dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
 			try:
-				print(
-					f"{m.bcolors.WARNING}This might take a while..."
-					f"{m.bcolors.ENDC}"
-				)
-				# get playlist title
+				print(f"{m.bcolors.WARNING}This might take a while...{m.bcolors.ENDC}")
 				request = youtube.playlists().list(
 					part="snippet",
 					id=pl_id,
@@ -145,113 +177,54 @@ if __name__ == "__main__":
 				)
 				response2 = request.execute()
 				if "items" in response2 and len(response2["items"]) > 0:
-					print(
-						f"TITLE: {m.bcolors.OKGREEN}"
-						f"{response2['items'][0]['snippet']['title']}"
-						f"{m.bcolors.ENDC}"
-					)
+					print(f"TITLE: {m.bcolors.OKGREEN}{response2['items'][0]['snippet']['title']}{m.bcolors.ENDC}")
 
-				response1 = items.list(
-					part="snippet",
-					playlistId=pl_id,
-					maxResults=50
-				)
-				display_str = ""
+				response1 = items.list(part="snippet", playlistId=pl_id, maxResults=50)
 				counter = 1
-				dni = []		# do not include
-				dupe_del = []	# deleted but currently in list
-				dna_string = ""
+				dni = []
+				dupe_del = []
+				dna_new = []
+				batch_buffer = []
+				BATCH_SIZE = 50
 
 				while response1:
 					pl_response = response1.execute()
 					for pl_item in pl_response["items"]:
 						yid = pl_item["snippet"]["resourceId"]["videoId"]
-						if yid not in yt_ids_list:
-							if pl_item["snippet"]["title"] == "Deleted video":
-								display_str = (
-									f"{counter} {m.bcolors.FAIL}"
-									f"{yid}{m.bcolors.ENDC} {m.bcolors.FAIL}"
-									f"(DELETED){m.bcolors.ENDC}"
-								)
-								print(display_str)
-								dni.append(yid)
-								if yid not in dna:
-									dna.add(yid)
-									dna_string += f"\n{yid}"
-							elif pl_item["snippet"]["title"] == "Private video":
-								yt_ids_index[yid] = len(yt_ids_index) + 1
-								display_str = (
-									f"{counter} {m.bcolors.WARNING}{yid}"
-									f"{m.bcolors.ENDC} {m.bcolors.WARNING}"
-									f"(PRIVATE){m.bcolors.ENDC}"
-									f" {m.bcolors.OKCYAN}"
-									f"({yt_ids_index.get(yid)}){m.bcolors.ENDC}"
-								)
-								print(display_str)
-							elif yid in dna: # do not add this id if in dna set
-								display_str = (
-									f"{counter} {m.bcolors.FAIL}{yid}"
-									f"{m.bcolors.ENDC} {m.bcolors.FAIL}"
-									f"{pl_item['snippet']['title']}"
-									f"{m.bcolors.ENDC} {m.bcolors.FAIL}"
-									f"(SKIPPED){m.bcolors.ENDC}"
-								)
-								print(display_str)
-							else:
-								yt_ids_index[yid] = len(yt_ids_index) + 1
-								display_str = (
-									f"{counter} {m.bcolors.OKGREEN}{yid}"
-									f"{m.bcolors.ENDC} {m.bcolors.OKBLUE}"
-									f"{pl_item['snippet']['title']}"
-									f"{m.bcolors.ENDC}"
-									f" {m.bcolors.OKCYAN}"
-									f"({yt_ids_index.get(yid)}){m.bcolors.ENDC}"
-								)
-								print(display_str)
-						else:
-							display_str = (
-								f"{counter} {m.bcolors.FAIL}{yid}"
-								f"{m.bcolors.ENDC} {m.bcolors.HEADER}"
-								f"{pl_item['snippet']['title']}{m.bcolors.ENDC}"
-								f" {m.bcolors.OKCYAN}(DUPE, "
-								f"{yt_ids_index.get(yid)}){m.bcolors.ENDC}"
-							)
+						status_info = process_video_item(yid, pl_item, counter, yt_ids_list, yt_ids_index, dna)
+						batch_buffer.append(status_info)
+						
+						if status_info["action"] == "yield":
+							if yid not in dni:
+								yield yid
+						elif status_info["action"] == "dni":
 							dni.append(yid)
-							dupe_del_string = (
-								f"{m.bcolors.HEADER}Deleted "
-								f"video{m.bcolors.ENDC} {m.bcolors.OKCYAN}"
-								f"(DUPE, "
-							)
-							if dupe_del_string in display_str:
-								dupe_del.append(yid)
-							print(display_str)
-
 						counter += 1
-						if yid not in dni:
-							yield yid
-
-					response1 = youtube.playlistItems().list_next(
-						response1, pl_response)
+						if len(batch_buffer) >= BATCH_SIZE:
+							print_batch(batch_buffer)
+							batch_buffer = []
+					if batch_buffer:
+						print_batch(batch_buffer)
+						batch_buffer = []
+					response1 = youtube.playlistItems().list_next(response1, pl_response)
 					OVERALL = counter - 1
 
 				if dupe_del:
 					for yid in dupe_del:
 						if yid not in dna:
-							dna_string += f"\n{yid}"
+							dna_new.append(yid)
 							dna.add(yid)
 					temp = f"({dupe_del[0]}\\n?)" if len(dupe_del) == 1 \
-						else "(" + "".join(
-							[f"{yid}\\n?|" for yid in dupe_del])[:-1] + ")"
+						else "(" + "".join([f"{yid}\\n?|" for yid in dupe_del])[:-1] + ")"
 					print(f"\n{m.bcolors.WARNING}REMOVE THESE!{m.bcolors.ENDC}")
 					print(f"{m.bcolors.FAIL}{temp}{m.bcolors.ENDC}\n")
-					subprocess.run(
-						"clip", input=temp, check=True, encoding="utf-8")
+					subprocess.run("clip", input=temp, check=True, encoding="utf-8")
 
-				if dna_string:
+				if dna_new:
 					with open(f"{m.dir_path}/ignore/dna.txt", "a") as f:
-						f.write(dna_string)
+						f.write("\n" + "\n".join(dna_new))
 					dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
-				# dna_string = ""
+
 			except Exception as e:
 				print(f"DETAILS:\n{e}")
 
@@ -334,7 +307,7 @@ if __name__ == "__main__":
 								f"{datetime.now().strftime(m.DATE_FORMAT)}"
 								f"{m.bcolors.ENDC} {m.bcolors.UNDERLINE}"
 								f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC} "
-								f"{m.bcolors.WARNING}(skipped){m.bcolors.ENDC}"
+								f"{m.bcolors.FAIL}(SKIPPED){m.bcolors.ENDC}"
 							)
 						elif yid not in yt_ids_list:
 							with open(
@@ -361,8 +334,8 @@ if __name__ == "__main__":
 								f"{datetime.now().strftime(m.DATE_FORMAT)}"
 								f"{m.bcolors.ENDC} {m.bcolors.UNDERLINE}"
 								f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC}"
-								f"{m.bcolors.WARNING} already at line "
-								f"{yt_ids_index.get(yid)}.{m.bcolors.ENDC}"
+								f"{m.bcolors.WARNING} ({yt_ids_index.get(yid)})"
+								f"{m.bcolors.ENDC}"
 							)
 						continue
 
