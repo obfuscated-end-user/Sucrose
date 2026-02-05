@@ -118,8 +118,13 @@ if __name__ == "__main__":
 
 		def process_video_item(yid, pl_item, counter, yt_ids_list, yt_ids_index, dna):
 			"""Process single video item and return status dict"""
+			global dupe_del, show_remove_msg
 			if yid not in yt_ids_list:
 				if pl_item["snippet"]["title"] == "Deleted video":
+					global dupe_del
+					if "dupe_del" not in globals():
+						dupe_del = []
+					dupe_del.append(yid)
 					return {
 						"display": f"{counter} {m.bcolors.FAIL}{yid}{m.bcolors.ENDC} {m.bcolors.FAIL}(DELETED){m.bcolors.ENDC}",
 						"action": "dni"
@@ -145,10 +150,11 @@ if __name__ == "__main__":
 				display_str = f"{counter} {m.bcolors.FAIL}{yid}{m.bcolors.ENDC} {m.bcolors.HEADER}{pl_item['snippet']['title']}{m.bcolors.ENDC} {m.bcolors.WARNING}({yt_ids_index.get(yid)}){m.bcolors.ENDC}"
 				dupe_del_string = f"{m.bcolors.HEADER}Deleted video{m.bcolors.ENDC} {m.bcolors.WARNING}("
 				if dupe_del_string in display_str:
-					global dupe_del
 					if "dupe_del" not in globals():
 						dupe_del = []
 					dupe_del.append(yid)
+					global show_remove_msg
+					show_remove_msg = True
 				return {"display": display_str, "action": "dni"}
 
 
@@ -163,6 +169,8 @@ if __name__ == "__main__":
 			global yt_ids_list
 			global dna
 			global dupe_del
+			global show_remove_msg
+			show_remove_msg = False
 			if not assert_id_list_length():
 				print(f"{m.bcolors.WARNING}Changes detected in yt_ids.txt, reloading...{m.bcolors.ENDC}")
 				yt_ids_list = set(m.load_yt_id_file())
@@ -209,20 +217,20 @@ if __name__ == "__main__":
 					response1 = youtube.playlistItems().list_next(response1, pl_response)
 					OVERALL = counter - 1
 
-				if dupe_del:
-					for yid in dupe_del:
-						if yid not in dna:
-							dna_new.append(yid)
-							dna.add(yid)
+				dna_new = [yid for yid in dupe_del if yid not in dna]
+				for yid in dna_new:
+					dna.add(yid)
+				if dna_new:
+					with open(f"{m.dir_path}/ignore/dna.txt", "a") as f:
+						f.write("\n" + "\n".join(dna_new))
+
+				if show_remove_msg and dupe_del:
 					temp = f"({dupe_del[0]}\\n?)" if len(dupe_del) == 1 \
 						else "(" + "".join([f"{yid}\\n?|" for yid in dupe_del])[:-1] + ")"
 					print(f"\n{m.bcolors.WARNING}REMOVE THESE!{m.bcolors.ENDC}")
 					print(f"{m.bcolors.FAIL}{temp}{m.bcolors.ENDC}\n")
 					subprocess.run("clip", input=temp, check=True, encoding="utf-8")
 
-				if dna_new:
-					with open(f"{m.dir_path}/ignore/dna.txt", "a") as f:
-						f.write("\n" + "\n".join(dna_new))
 					dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
 
 			except Exception as e:
@@ -239,11 +247,8 @@ if __name__ == "__main__":
 			)
 			input_str = re.sub("(&pp|\?si)=[\w%].*", "", input_str)
 			# skip these because they appear often enough when you do it
-			social_domains = [
-				"facebook.com", "instagram.com", "tiktok.com", "reddit.com",
-				"fandom.com"
-			]
-			if any(domain in input_str.lower() for domain in social_domains):
+			domains = ["facebook.com", "instagram.com", "tiktok.com", "reddit.com", "fandom.com"]
+			if any(domain in input_str.lower() for domain in domains):
 				print(m.ERASE_ABOVE.strip(), end="")
 				continue
 			if input_str.replace("/", "").rstrip().lower() == "n":
