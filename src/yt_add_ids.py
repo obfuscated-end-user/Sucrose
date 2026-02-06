@@ -11,6 +11,8 @@ import morefunc as m
 from datetime import datetime
 from collections import deque
 import ctypes
+import traceback
+import requests
 
 if __name__ == "__main__":
 	try:
@@ -100,9 +102,10 @@ if __name__ == "__main__":
 			f"{m.bcolors.ENDC}"
 		)
 
-		yt_id_regex = re.compile(
-			"(?:(?<=^)|(?<==)|(?<=/))([\w_\-]{11})(?=(&|$))")
+		yt_id_regex = re.compile("(?:(?<=^)|(?<==)|(?<=/))([\w_\-]{11})(?=(&|$))")
 		yt_playlist_regex = re.compile(m.YT_PLAYLIST_ID_REGEX)
+		yt_channel_id_regex = re.compile("UC[\w-]{22}")
+		yt_handle_regex = re.compile("(?<=https://www\.youtube\.com/)([@\w-]{2,29})$")
 
 		"""
 		yt_ids_list - the list of ids
@@ -255,6 +258,27 @@ if __name__ == "__main__":
 				break
 			try:
 				print(m.ERASE_ABOVE.strip(), end="")
+				# check if input contains a handle (@username)
+				handle_match = yt_handle_regex.search(input_str)
+				if handle_match:
+					handle = handle_match.group(1)
+					try:
+						url = f"https://www.googleapis.com/youtube/v3/channels?part=id&forHandle={handle}&key={API_KEY}"
+						response = requests.get(url)
+						data = response.json()
+
+						if data.get("items"):
+							channel_id = data["items"][0]["id"]
+							input_str = f"https://www.youtube.com/playlist?list=UU{channel_id[2:]}"
+					except Exception as e:
+						print(f"{m.bcolors.FAIL}Error fetching channel {handle}: {e}{m.bcolors.ENDC}")
+						continue
+				# check for channel id
+				channel_match = yt_channel_id_regex.search(input_str)
+				if channel_match:
+					channel_id = channel_match.group(0)
+					if channel_id:
+						input_str = f"https://www.youtube.com/playlist?list=UU{channel_id[2:]}"
 				# check for playlist id
 				playlist_match = yt_playlist_regex.search(input_str)
 				if playlist_match:
@@ -348,7 +372,7 @@ if __name__ == "__main__":
 				print(f"\n{m.bcolors.WARNING}Interrupted.{m.bcolors.ENDC}")
 				continue_input = "n"
 			except Exception as e:
-				print(f"{m.bcolors.FAIL}Error: {e}{m.bcolors.ENDC}")
+				print(f"{m.bcolors.FAIL}Error: {e}\n{traceback.format_exc()}{m.bcolors.ENDC}")
 
 		instance.stop()
 
