@@ -1,18 +1,17 @@
 import ctypes
 import os
+import re
 import subprocess
 import sys
 import time
-import re
+import traceback
+import requests
 from collections import OrderedDict
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 import morefunc as m
 from datetime import datetime
 from collections import deque
-import ctypes
-import traceback
-import requests
 
 if __name__ == "__main__":
 	try:
@@ -105,7 +104,7 @@ if __name__ == "__main__":
 		yt_id_regex = re.compile("(?:(?<=^)|(?<==)|(?<=/))([\w_\-]{11})(?=(&|$))")
 		yt_playlist_regex = re.compile(m.YT_PLAYLIST_ID_REGEX)
 		yt_channel_id_regex = re.compile("UC[\w-]{22}")
-		yt_handle_regex = re.compile("(?<=https://www\.youtube\.com/)([@\w-]{2,29})$")
+		yt_handle_regex = re.compile("https://www\.youtube\.com/(?:@|channel/)([\w.%-]+)(?!\S)")
 
 		"""
 		yt_ids_list - the list of ids
@@ -250,7 +249,7 @@ if __name__ == "__main__":
 			)
 			input_str = re.sub("(&pp|\?si)=[\w%].*", "", input_str)
 			# skip these because they appear often enough when you do it
-			domains = ["facebook.com", "instagram.com", "tiktok.com", "reddit.com", "fandom.com"]
+			domains = ["facebook.com", "instagram.com", "tiktok.com", "reddit.com", "fandom.com", "open.spotify.com"]
 			if any(domain in input_str.lower() for domain in domains):
 				print(m.ERASE_ABOVE.strip(), end="")
 				continue
