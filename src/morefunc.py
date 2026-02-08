@@ -18,7 +18,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 ERASE_ABOVE = "\033[1A\x1b[2K" # https://en.wikipedia.org/wiki/ANSI_escape_code
 SUCROSE_IMAGE = os.getenv("SUCROSE_IMAGE")
-YT_VIDEO_ID_REGEX = "^([A-Za-z0-9_\-]{11})$"
+YT_VIDEO_ID_REGEX = "^([\w-]{11})$"
 YT_PLAYLIST_ID_REGEX = "([\w-]{41}|[\w-]{34}|[\w-]{24}|[\w-]{18})"
 YT_IDS_FILE_PATH = f"{dir_path}/ignore/yt_ids.txt"
 
@@ -169,17 +169,27 @@ def is_id_available(
 	"""
 	check = session.get(f"https://youtu.be/{id}")
 	indicators = [
-		"Video unavailable",
-		"This video isn't available anymore",
-		"Members-only content",
+		# "Video unavailable",
+		"This live stream recording is not available.",
+		"This video is only available to Music Premium members",
 		"Join this channel to get access to members-only content like this video, and other exclusive perks.",
+		"This video has been removed for violating YouTube's policy on hate speech. Learn more about combating hate speech in your country.",
+		"This video has been removed for violating YouTube's policy on harassment and bullying",
+		"This video has been removed for violating YouTube's policy on nudity or sexual content",
+		"This video is no longer available because the uploader has closed their YouTube account.",
+		"This video is no longer available due to a copyright claim by",
+		"This video is no longer available because the YouTube account associated with this video has been terminated.",
+		"This video has been removed for violating YouTube's Community Guidelines",
+		"This video has been removed for violating YouTube's Terms of Service",
+		"This video has been removed for violating YouTube's policy on spam, deceptive practices, and scams",
+		"This video has been removed for violating YouTube's policy on violent or graphic content",
+		"This video has been removed by the uploader",
+		"This video isn't available anymore",
 	]
 	if include_private:
 		indicators.append("Private video")
 
-	return bool(
-		[indicator for indicator in indicators if (indicator in check.text)]
-	)
+	return bool([indicator for indicator in indicators if (indicator in check.text)])
 
 
 def find_dupes(mode: int) -> dict[str, list]:

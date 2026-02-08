@@ -88,8 +88,7 @@ if __name__ == "__main__":
 		)
 		dna_remove = [yid for yid in yt_ids_list if yid in dna]
 		dna_remove_str = f"({dna_remove[0]}\\n?)" if len(dna_remove) == 1 \
-			else "(" + "".join(
-				[f"{yid}\\n?|" for yid in dna_remove])[:-1] + ")"
+			else "(" + "".join([f"{yid}\\n?|" for yid in dna_remove])[:-1] + ")"
 		if dna_remove_str != "()":
 			print(f"\n{m.bcolors.WARNING}REMOVE THESE!{m.bcolors.ENDC}")
 			print(f"{m.bcolors.FAIL}{dna_remove_str}{m.bcolors.ENDC}\n")
@@ -104,7 +103,7 @@ if __name__ == "__main__":
 		yt_id_regex = re.compile("(?:(?<=^)|(?<==)|(?<=/))([\w_\-]{11})(?=(&|$))")
 		yt_playlist_regex = re.compile(m.YT_PLAYLIST_ID_REGEX)
 		yt_channel_id_regex = re.compile("UC[\w-]{22}")
-		yt_handle_regex = re.compile("https://www\.youtube\.com/(?:@|channel/)([\w.%-]+)(?!\S)")
+		yt_handle_regex = re.compile("https://www\.youtube\.com/(?:@|user/|channel/)([\w.%-]+)/?(?!\S)")
 
 		"""
 		yt_ids_list - the list of ids

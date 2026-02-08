@@ -8,7 +8,6 @@ import morefunc as m
 import requests
 import yt_dlp
 
-from add_id import add_id
 from bs4 import BeautifulSoup
 from discord.ext import bridge, commands
 from morefunc import bcolors as c
