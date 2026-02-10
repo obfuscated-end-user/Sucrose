@@ -29,9 +29,7 @@ class Yt_Bot(commands.Cog):
 		self.last_warning_time = {}
 
 
-	@bot.bridge_command(
-		aliases=["rv", "ytlink", "ytl", "youtube", "randomvideo", "randvid"]
-	)
+	@bot.bridge_command(aliases=["rv", "ytlink", "ytl", "youtube", "randomvideo", "randvid"])
 	async def yt(
 		self,
 		ctx: discord.ext.bridge.context.BridgeApplicationContext
@@ -66,10 +64,8 @@ class Yt_Bot(commands.Cog):
 			view_count_temp = soup.find_all(
 				"meta", attrs={"itemprop":"userInteractionCount"})[0]["content"]
 			view_count = f"{int(view_count_temp):,}"
-		uploader = soup.select_one(
-			"link[itemprop='name'][content]")["content"].replace("*", "\*")
-		title = soup.find_all(
-			name="title")[0].text.split(" - YouTube")[0].replace("*", "\*")
+		uploader = soup.select_one("link[itemprop='name'][content]")["content"].replace("*", "\*")
+		title = soup.find_all(name="title")[0].text.split(" - YouTube")[0].replace("*", "\*")
 
 		# the dates will depend on your time zone
 		# for example, all dates returned by soup are one day ahead
@@ -105,10 +101,7 @@ class Yt_Bot(commands.Cog):
 		if user_id not in self.last_warning_time \
 			or now_user - self.last_warning_time[user_id] > cooldown:
 			self.last_warning_time[user_id] = now_user
-			await ctx.respond(
-				embed=make_embed(f"### ⚠️ POTENTIAL NSFW/L WARNING!\n"
-					+ embed_string)
-				)
+			await ctx.respond(embed=make_embed(f"### ⚠️ POTENTIAL NSFW/L WARNING!\n" + embed_string))
 		else:
 			await ctx.respond(embed=make_embed(embed_string))
 	
@@ -158,18 +151,24 @@ def get_id() -> str:
 	"""
 	Get ID. This should not return an ID for a deleted/privated video.
 	"""
-	id = choice(yt_ids)
-	m.print_with_timestamp(f"INIT: {id}")
-	id_availability = m.is_id_available(id, s, include_private=True)
-	while (id_availability):
-		m.print_with_timestamp(f"EPIC FAIL 404: {id}")
-		yt_ids.remove(id)
-		id = choice(yt_ids)
-		id_availability = m.is_id_available(id, s, include_private=True)
+	yid = choice(yt_ids)
+	m.print_with_timestamp(f"INIT: {yid}")
+	id_availability = m.is_id_available(yid, s, include_private=True)
+	is_deleted = m.is_id_available(yid, s)
+	while id_availability:
+		m.print_with_timestamp(f"EPIC FAIL 404: {yid}")
+		if is_deleted:
+			dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
+			if yid not in dna:
+				with open(f"{m.dir_path}/ignore/dna.txt", "a") as f:
+					f.write(f"\n{yid}")
+		yt_ids.remove(yid)
+		yid = choice(yt_ids)
+		id_availability = m.is_id_available(yid, s, include_private=True)
 
-	# id = choice(m.hj)
-	m.print_with_timestamp(f"SUCCESS 200: {id}")
-	return id
+	# yid = choice(m.hj)
+	m.print_with_timestamp(f"SUCCESS 200: {yid}")
+	return yid
 
 
 def setup(bot):
