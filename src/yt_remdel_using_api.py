@@ -29,8 +29,10 @@ HEADERS = {
 	"user-agent": USER_AGENT,
 }
 
-TEMP_RANGE_START = 1_210_000
-TEMP_RANGE_END = 4_970_000
+TEMP_RANGE_START = 1 #1_210_000 5310000
+TEMP_RANGE_END = 5_500_000 #4_980_000 5320000
+
+dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
 
 
 def chunk_list(lst, n):
@@ -41,7 +43,7 @@ def chunk_list(lst, n):
 		yield lst[i:i + n]
 
 
-async def fetch_video_statuses(youtube, video_ids):
+async def fetch_video_statuses(youtube, video_ids) -> dict:
 	"""
 	Check video statuses using YouTube API for a batch of IDs.
 	"""
@@ -52,16 +54,16 @@ async def fetch_video_statuses(youtube, video_ids):
 	response = request.execute()
 	statuses = {}
 	for item in response.get("items", []):
-		vid = item["id"]
-		statuses[vid] = item["status"]
+		yid = item["id"]
+		statuses[yid] = item["status"]
 	# videos not in `response` are possibly deleted or unavailable
-	for vid in video_ids:
-		if vid not in statuses:
-			statuses[vid] = None
+	for yid in video_ids:
+		if yid not in statuses:
+			statuses[yid] = None
 	return statuses
 
 
-async def is_id_private(id, session):
+async def is_id_private(id, session) -> bool:
 	"""
 	Return True if video is private.
 	"""
@@ -76,7 +78,7 @@ async def is_id_private(id, session):
 	except Exception:
 		return True
 
-async def process_batch(youtube, session, batch_ids):
+async def process_batch(youtube, session, batch_ids) -> list[str]:
 	"""
 	Process one batch of IDs: check status via API, then filter private videos
 	concurrently.
@@ -97,38 +99,57 @@ async def process_batch(youtube, session, batch_ids):
 	return real_del_ids
 
 
-async def main():
+async def main() -> None:
 	yt_ids_full = m.load_yt_id_file()
-	temp = [] + yt_ids_full[TEMP_RANGE_START:TEMP_RANGE_END]
-	shuffle(temp)
-
-	os.system("cls" if os.name == "nt" else "clear")
+	dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
 	range_ids = int(input("Enter number of IDs to process: "))
-	ids_to_check = temp[:range_ids]
-
-	print()
+	already_processed = set()
 	youtube = build("youtube", "v3", developerKey=API_KEY)
+
 	async with aiohttp.ClientSession(
 		connector=aiohttp.TCPConnector(limit=20)) as session:
 		ids_removed = 0
 		total_iterations = 0
 		while True:
 			start = time.time()
+			temp = [] + yt_ids_full#[TEMP_RANGE_START:TEMP_RANGE_END]
+			shuffle(temp)
+			# filter out already processed (preserves shuffled order)
+			working_set = [yid for yid in temp if yid not in already_processed]
+			if not working_set:
+				print("No unprocessed IDs remain.")
+				break
+			ids_to_check = working_set[:range_ids]
+
 			deleted_all = []
 			batches = list(chunk_list(ids_to_check, BATCH_SIZE))
+
 			for batch in batches:
-				# print(f"\nBATCH\n{batch[:5]}", m.ERASE_ABOVE.strip())
 				deleted = await process_batch(youtube, session, batch)
 				deleted_all.extend(deleted)
 
 			if not deleted_all:
-				print("No more deleted IDs found.")
-				os.system("pause")
+				print("No deleted IDs found. Stopping.")
 				break
 
 			# remove deleted ids from the main list and update the file
-			yt_ids_full = [vid for vid in yt_ids_full if vid not in deleted_all]
-			# print("DELETED\n", deleted_all[:20], len(deleted_all), "\n")
+			yt_ids_full = [yid for yid in yt_ids_full if yid not in deleted_all]
+			# cache survivors
+			already_processed.update(set(ids_to_check) - set(deleted_all))
+
+			dna_string = ""
+			for yid in deleted_all:
+				if yid not in dna:
+					dna.add(yid)
+					dna_string += f"\n{yid}"
+			# append deleted ids to this file
+			if dna_string:
+				with open(
+					f"{m.dir_path}/ignore/dna.txt", "a", encoding="utf-8"
+				) as f:
+					f.write(dna_string)
+
+			# write to list
 			file_path = f"{m.dir_path}/ignore/yt_ids.txt"
 			with open(file_path, "w", encoding="utf-8") as f:
 				f.write("\n".join(yt_ids_full))
@@ -136,24 +157,21 @@ async def main():
 			ids_removed += len(deleted_all)
 			total_iterations += 1
 			end = time.time()
-
 			m.print_with_timestamp(
 				f"{', '.join(deleted_all[:10])}\n"
-				f"\tREMOVED IN THIS BATCH: {len(deleted_all)}\n"
-				f"\tTOTAL IDS REMOVED: {ids_removed}\n"
+				f"\tREMOVED THIS PASS: {len(deleted_all)}\n"
+				f"\tTOTAL REMOVED: {ids_removed}\n"
 				f"\tITERATION: {total_iterations}\n"
-				f"\tDURATION (in seconds): {end - start}\n"
+				f"\tREMAINING TO CHECK: {len(working_set)}\n"
+				f"\tALREADY PROCESSED: {len(already_processed)}\n"
+				f"\tDURATION: {end - start:.1f}s\n"
 			)
-
 			# comment out this break statement if you want to do another pass
 			# automatically (mind the quota though)
 			# break
 
-			# update ids_to_check for next iteration (based on updated list)
-			yt_ids_full = m.load_yt_id_file()
-			temp = [] + yt_ids_full[TEMP_RANGE_START:TEMP_RANGE_END]
-			shuffle(temp)
-			ids_to_check = temp[:range_ids]
+	print(f"Complete. Total removed: {ids_removed}")
+
 
 if __name__ == "__main__":
 	try:
