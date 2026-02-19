@@ -22,7 +22,7 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 class Basic(commands.Cog):
 	def __init__(self, bot: discord.ext.bridge.Bot):
 		self.bot = bot
-		self.conversations = {}  # {conv_key: [{"role": "user/assistant", "content": "..."}]}
+		self.conversations = {}	# {conv_key: [{"role": "user/assistant", "content": "..."}]}
 
 	@bot.bridge_command()
 	async def hello(
@@ -323,7 +323,7 @@ class Basic(commands.Cog):
 
 		content_string = (
 			"You are Sucrose from Genshin Impact. Shy, curious bio-alchemy expert. Keep responses short and informative. Don't wrap words in asterisks (ex. *adjusts glasses*), only do that if relevant. Don't hesitate to answer questions out of your scope!\n\n"
-			f"Current context:\n"
+			"Current context:\n"
 			f"- Discord server: {guild_name}\n"
 			f"- Channel: {channel_name}\n"
 			f"- Talking to: {username}\n"
@@ -389,7 +389,7 @@ class Basic(commands.Cog):
 		About Sucrose.
 		"""
 		await ctx.respond(embed=make_embed(
-				f"# Sucrose\nMade by obfuscated-end-user (横浜).\n\n"
+				"# Sucrose\nMade by obfuscated-end-user (横浜).\n\n"
 				f"© 2023-{datetime.now().strftime('%Y')}"
 			),
 			delete_after=30
