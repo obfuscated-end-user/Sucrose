@@ -209,6 +209,35 @@ def find_dupes(mode: int) -> dict[str, list]:
 	return dupes
 
 
+def load_cache_set():
+	"""
+	Load cached processed IDs.
+	"""
+	cached_set = set()
+	if os.path.exists(f"{dir_path}/ignore/cache.txt"):
+		try:
+			with open(f"{dir_path}/ignore/cache.txt", "r", encoding="utf-8") as f:
+				cached_set = set(line.strip() for line in f if line.strip())
+		except Exception as e:
+			print(f"fail {e}")
+
+	return cached_set
+
+
+def save_cache_update(new_ids, cached_set):
+	"""
+	Append new processed IDs to cache.txt.
+	"""
+	try:
+		with open(f"{dir_path}/ignore/cache.txt", "a", encoding="utf-8") as f:
+			for vid_id in new_ids:
+				if vid_id not in cached_set:
+					f.write(f"\n{vid_id}")
+					cached_set.add(vid_id)
+	except Exception as e:
+		print(f"fail {e}")
+
+
 def print_with_timestamp(text: str) -> None:
 	"""
 	Print text into the terminal with a timestamp.
