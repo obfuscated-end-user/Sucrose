@@ -36,6 +36,7 @@ def process_ids():
 	indexed_ids = list(enumerate(yt_ids_full))#[TEMP_RANGE_START:TEMP_RANGE_END]
 	dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
 	already_processed = set()
+	cached_set = m.load_cache_set()
 
 	# change this variable if you get frequent timeouts
 	# don't use values >2000
@@ -78,12 +79,12 @@ def process_ids():
 	if (mode == 1):
 		indexed_ids = indexed_ids[range_start:range_end]
 		# filter already processed
-		indexed_ids = [(idx, yid) for idx, yid in indexed_ids if yid not in already_processed]
+		indexed_ids = [(idx, yid) for idx, yid in indexed_ids if yid not in cached_set]
 	elif (mode == 2 or mode == 3):
 		shuffle(indexed_ids)
 		indexed_ids = indexed_ids[:range_end]
 		# filter already processed
-		indexed_ids = [(idx, yid) for idx, yid in indexed_ids if yid not in already_processed]
+		indexed_ids = [(idx, yid) for idx, yid in indexed_ids if yid not in cached_set]
 	del_ids = []
 
 	async def is_id_available(
@@ -161,7 +162,9 @@ def process_ids():
 
 	del_ids_temp = []
 	async def main() -> None:
+		nonlocal cached_set
 		dna_string = ""
+		newly_processed = set()
 		async with aiohttp.ClientSession(
 			connector=aiohttp.TCPConnector(limit=50)) as session:
 			m.print_with_timestamp("Checking if IDs are available...")
@@ -172,6 +175,8 @@ def process_ids():
 			for (idx, yid), (is_deleted, indicator) in zip(indexed_ids, r1):
 				if is_deleted:
 					del_ids_temp.append((idx, yid, indicator))
+				else:
+					newly_processed.add(yid)
 
 			m.print_with_timestamp("Checking if IDs are private...")
 			t2 = [is_id_private(yid, session) for idx, yid, indicator in del_ids_temp]
@@ -183,6 +188,9 @@ def process_ids():
 					if yid not in dna:
 						dna.add(yid)
 						dna_string += f"\n{yid}"
+
+			# cache survivors
+			m.save_cache_update(newly_processed, cached_set)
 
 			# append deleted ids to this file
 			if dna_string:
@@ -204,7 +212,7 @@ def process_ids():
 			temp = [] + yt_ids_full#[TEMP_RANGE_START:TEMP_RANGE_END]
 			shuffle(temp)
 			# filter out already processed IDs (preserves shuffle order)
-			working_set = [yid for yid in temp if yid not in already_processed]
+			working_set = [yid for yid in temp if yid not in cached_set]
 			if not working_set:
 				m.print_with_timestamp("No unprocessed IDs remain.")
 				break
@@ -214,8 +222,9 @@ def process_ids():
 			ids_to_check = [(id_to_original_index[yid], yid) for yid in working_set[:range_end]]
 			# main() specifically made for this mode
 			async def main_mode3():
-				nonlocal already_processed
+				nonlocal cached_set
 				dna_string = ""
+				newly_processed = set()
 				async with aiohttp.ClientSession(
 					connector=aiohttp.TCPConnector(limit=50)) as session:
 					# check availability
@@ -227,6 +236,8 @@ def process_ids():
 					for (idx, yid), (is_deleted, indicator) in zip(ids_to_check, r1):
 						if is_deleted:
 							del_ids_temp.append((idx, yid, indicator))
+						else:
+							newly_processed.add(yid)
 
 					# check private
 					if del_ids_temp:
@@ -242,10 +253,13 @@ def process_ids():
 									dna.add(yid)
 									dna_string += f"\n{yid}"
 
+					# cache survivors
+					m.save_cache_update(newly_processed, cached_set)
+
 					# update already_processed with survivors from this batch
-					batch_ids = set(yid for _, yid in ids_to_check)
-					survivors = batch_ids - set(yid for _, yid, _ in del_ids)
-					already_processed.update(survivors)
+					# batch_ids = set(yid for _, yid in ids_to_check)
+					# survivors = batch_ids - set(yid for _, yid, _ in del_ids)
+					# already_processed.update(survivors)
 
 					if dna_string:
 						with open(f"{m.dir_path}/ignore/dna.txt", "a", encoding="utf-8") as f:
@@ -259,7 +273,7 @@ def process_ids():
 				f"REMOVED IN THIS BATCH: {len(del_ids)}\n"
 				f"TOTAL IDS REMOVED: {ids_removed}\n"
 				f"REMAINING TO CHECK: {len(working_set)}\n"
-				f"ALREADY PROCESSED: {len(already_processed)}"
+				f"CACHED PROCESSED: {len(cached_set)}"
 			)
 
 			if not del_ids:

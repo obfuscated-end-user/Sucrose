@@ -78,6 +78,7 @@ async def is_id_private(id, session) -> bool:
 	except Exception:
 		return True
 
+
 async def process_batch(youtube, session, batch_ids) -> list[str]:
 	"""
 	Process one batch of IDs: check status via API, then filter private videos
@@ -103,7 +104,8 @@ async def main() -> None:
 	yt_ids_full = m.load_yt_id_file()
 	dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
 	range_ids = int(input("Enter number of IDs to process: "))
-	already_processed = set()
+	# already_processed = set()
+	cached_set = m.load_cache_set()
 	youtube = build("youtube", "v3", developerKey=API_KEY)
 
 	async with aiohttp.ClientSession(
@@ -115,7 +117,7 @@ async def main() -> None:
 			temp = [] + yt_ids_full#[TEMP_RANGE_START:TEMP_RANGE_END]
 			shuffle(temp)
 			# filter out already processed (preserves shuffled order)
-			working_set = [yid for yid in temp if yid not in already_processed]
+			working_set = [yid for yid in temp if yid not in cached_set]
 			if not working_set:
 				print("No unprocessed IDs remain.")
 				break
@@ -135,7 +137,9 @@ async def main() -> None:
 			# remove deleted ids from the main list and update the file
 			yt_ids_full = [yid for yid in yt_ids_full if yid not in deleted_all]
 			# cache survivors
-			already_processed.update(set(ids_to_check) - set(deleted_all))
+			newly_processed = set(ids_to_check) - set(deleted_all)
+			m.save_cache_update(newly_processed, cached_set)
+			# already_processed.update(set(ids_to_check) - set(deleted_all))
 
 			dna_string = ""
 			for yid in deleted_all:
@@ -163,7 +167,7 @@ async def main() -> None:
 				f"\tTOTAL REMOVED: {ids_removed}\n"
 				f"\tITERATION: {total_iterations}\n"
 				f"\tREMAINING TO CHECK: {len(working_set)}\n"
-				f"\tALREADY PROCESSED: {len(already_processed)}\n"
+				f"\tCACHED PROCESSED: {len(cached_set)}\n"
 				f"\tDURATION: {end - start:.1f}s\n"
 			)
 			# comment out this break statement if you want to do another pass

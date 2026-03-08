@@ -125,7 +125,8 @@ if __name__ == "__main__":
 					global dupe_del
 					if "dupe_del" not in globals():
 						dupe_del = []
-					dupe_del.append(yid)
+					if yid not in dupe_del:
+						dupe_del.append(yid)
 					return {
 						"display": f"{counter} {m.bcolors.FAIL}{yid}{m.bcolors.ENDC} {m.bcolors.FAIL}(DELETED){m.bcolors.ENDC}",
 						"action": "dni"
@@ -248,7 +249,7 @@ if __name__ == "__main__":
 			)
 			input_str = re.sub("(&pp|\?si)=[\w%].*", "", input_str)
 			# skip these because they appear often enough when you do it
-			domains = ["facebook.com", "instagram.com", "tiktok.com", "reddit.com", "fandom.com", "open.spotify.com"]
+			domains = ["facebook.com", "instagram.com", "tiktok.com", "reddit.com", "fandom.com", "open.spotify.com", "twitch.tv"]
 			if any(domain in input_str.lower() for domain in domains):
 				print(m.ERASE_ABOVE.strip(), end="")
 				continue
