@@ -209,7 +209,7 @@ def find_dupes(mode: int) -> dict[str, list]:
 	return dupes
 
 
-def load_cache_set():
+def load_cache_set() -> (set[str] | set):
 	"""
 	Load cached processed IDs.
 	"""
