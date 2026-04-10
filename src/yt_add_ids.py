@@ -75,6 +75,7 @@ if __name__ == "__main__":
 		# do not add list, most of these are member-restricted videos, videos
 		# that contain personally identifiable information, etc.
 		dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
+		cached_set = m.load_cache_set()
 		print(m.ERASE_ABOVE.strip(), end="")
 		print("Processing indices...")
 		yt_ids_index = load_yt_ids_with_lines(f"{m.dir_path}/ignore/yt_ids.txt")
@@ -195,6 +196,7 @@ if __name__ == "__main__":
 				dupe_del = []
 				dna_new = []
 				batch_buffer = []
+				cached_set_temp = set()
 				BATCH_SIZE = 50
 
 				while response1:
@@ -203,12 +205,17 @@ if __name__ == "__main__":
 						yid = pl_item["snippet"]["resourceId"]["videoId"]
 						status_info = process_video_item(yid, pl_item, counter, yt_ids_list, yt_ids_index, dna)
 						batch_buffer.append(status_info)
-						
 						if status_info["action"] == "yield":
 							if yid not in dni:
 								yield yid
+							if yid not in cached_set:
+								cached_set.add(yid)
+								cached_set_temp.add(yid)
 						elif status_info["action"] == "dni":
 							dni.append(yid)
+							if yid not in cached_set:
+								cached_set.add(yid)
+								cached_set_temp.add(yid)
 						counter += 1
 						if len(batch_buffer) >= BATCH_SIZE:
 							print_batch(batch_buffer)
@@ -218,6 +225,10 @@ if __name__ == "__main__":
 						batch_buffer = []
 					response1 = youtube.playlistItems().list_next(response1, pl_response)
 					OVERALL = counter - 1
+
+				if cached_set_temp:
+					with open(f"{m.dir_path}/ignore/cache.txt", "a", encoding="utf-8") as f:
+						f.write("\n" + "\n".join(cached_set_temp))
 
 				dna_new = [yid for yid in dupe_del if yid not in dna]
 				for yid in dna_new:
@@ -249,7 +260,7 @@ if __name__ == "__main__":
 			)
 			input_str = re.sub("(&pp|\?si)=[\w%].*", "", input_str)
 			# skip these because they appear often enough when you do it
-			domains = ["facebook.com", "instagram.com", "tiktok.com", "reddit.com", "fandom.com", "open.spotify.com", "twitch.tv"]
+			domains = ["facebook.com", "instagram.com", "tiktok.com", "reddit.com", "fandom.com", "open.spotify.com", "twitch.tv", "bilibili.tv", "nicovideo.jp", "soundcloud.com"]
 			if any(domain in input_str.lower() for domain in domains):
 				print(m.ERASE_ABOVE.strip(), end="")
 				continue
@@ -329,6 +340,10 @@ if __name__ == "__main__":
 				if video_match:
 					yid = video_match.group(1)
 					if re.match(m.YT_VIDEO_ID_REGEX, yid):
+						if yid not in cached_set:
+							cached_set.add(yid)
+							with open(f"{m.dir_path}/ignore/cache.txt", "a", encoding="utf-8") as f:
+								f.write(f"\n{yid}")
 						if yid in dna:
 							print(
 								f"{m.bcolors.HEADER}"
