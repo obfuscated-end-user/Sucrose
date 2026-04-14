@@ -191,12 +191,11 @@ if __name__ == "__main__":
 			if video_match:
 				yid = video_match.group(1)
 				if yid in dna:
-					print(f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC} {m.bcolors.WARNING}already excluded{m.bcolors.ENDC}")
+					print(f"{m.bcolors.HEADER}{datetime.now().strftime(m.DATE_FORMAT)}{m.bcolors.ENDC} {m.bcolors.WARNING}{yid}{m.bcolors.ENDC}")
 				else:
 					save_dna([yid])
 					dna.add(yid)
-					print(f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC} {m.bcolors.OKGREEN}EXCLUDED{m.bcolors.ENDC}")
-					print(f"{m.bcolors.OKCYAN}Total excluded IDs: {len(dna):,}{m.bcolors.ENDC}")
+					print(f"{m.bcolors.HEADER}{datetime.now().strftime(m.DATE_FORMAT)}{m.bcolors.ENDC} {m.bcolors.OKGREEN}{yid}{m.bcolors.ENDC}")
 				continue
 
 			print(f"{m.bcolors.FAIL}No valid YouTube ID, channel URL, or members-only playlist found{m.bcolors.ENDC}")
