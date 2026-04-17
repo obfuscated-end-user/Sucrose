@@ -13,7 +13,6 @@ from random import shuffle
 def process_ids():
 	# like unearthing fossils, this script tries to filter out deleted youtube
 	# videos, you know, whatever
-	start = time.time()
 	instance = m.SingleInstance(port=5)
 
 	load_dotenv()
@@ -45,6 +44,7 @@ def process_ids():
 	while True:
 		try:
 			mode = int(input(
+				f"Cached length: {len(cached_set)}\n"
 				"1 - Specify a start and end, and remove IDs within that range\n"
 				"2 - Randomly remove IDs within a range\n"
 				"3 - Same as mode 2, with automatic removal of those IDs from"
@@ -75,6 +75,10 @@ def process_ids():
 				break
 		except:
 			pass
+
+	# this used to be at the very top, but then i realized that i shouldn't start tracking time
+	# until the processing actually starts, because getting the user input above stalls the timer
+	start = time.time()
 
 	if (mode == 1):
 		indexed_ids = indexed_ids[range_start:range_end]
