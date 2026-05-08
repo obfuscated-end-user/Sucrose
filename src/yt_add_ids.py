@@ -263,7 +263,7 @@ if __name__ == "__main__":
 			domains = [
 				"facebook.com", "instagram.com", "tiktok.com", "reddit.com", "fandom.com",
 				"open.spotify.com", "twitch.tv", "bilibili.tv", "nicovideo.jp", "soundcloud.com",
-				"vimeo.com", "dailymotion.com"
+				"vimeo.com", "dailymotion.com", "linkedin.com", "pinterest.com"
 			]
 			if any(domain in input_str.lower() for domain in domains):
 				print(m.ERASE_ABOVE.strip(), end="")
