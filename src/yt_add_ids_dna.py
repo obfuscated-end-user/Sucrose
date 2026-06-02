@@ -99,14 +99,13 @@ if __name__ == "__main__":
 					request = yt.playlistItems().list_next(request, response)
 				return video_ids
 			except Exception as e:
-				print(f"{m.bcolors.FAIL}Playlist fetch error: {e}{m.bcolors.ENDC}")
+				print(f"{m.bcolors.FAIL}{e}{m.bcolors.ENDC}")
 				return []
 
-		print(f"{m.bcolors.WARNING}YouTube Excluded IDs Manager loaded...")
 		dna = load_dna()
 		ctypes.windll.kernel32.SetConsoleTitleW("YouTube Excluded IDs Manager")
 		print(m.ERASE_ABOVE.strip(), end="")
-		print(f"{len(dna):,} excluded IDs loaded.")
+		print(f"{m.bcolors.WARNING}{len(dna):,} excluded IDs loaded.")
 
 		print(f'{m.bcolors.OKCYAN}Enter YouTube ID/link/channel URL/members-only playlist ("n" to exit): {m.bcolors.ENDC}')
 
@@ -200,13 +199,13 @@ if __name__ == "__main__":
 
 			print(f"{m.bcolors.FAIL}No valid YouTube ID, channel URL, or members-only playlist found{m.bcolors.ENDC}")
 
-		print(f"{m.bcolors.OKGREEN}DNA Manager closed. {len(dna):,} total exclusions.{m.bcolors.ENDC}")
+		print(f"{m.bcolors.OKGREEN}{len(dna):,} total exclusions.{m.bcolors.ENDC}")
 		instance.stop()
 
 	except m.SingleInstanceError:
-		print(f"DNA Manager already running.")
+		print(f"Already running.")
 		sys.exit(1)
 	except KeyboardInterrupt:
 		print(f"\n{m.bcolors.WARNING}Interrupted.{m.bcolors.ENDC}")
 	except Exception as e:
-		print(f"{m.bcolors.FAIL}Error: {e}{m.bcolors.ENDC}")
+		print(f"{m.bcolors.FAIL}{e}{m.bcolors.ENDC}")
