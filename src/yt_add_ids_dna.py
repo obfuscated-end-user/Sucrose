@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
 		def get_playlist_video_ids(playlist_id):
 			"""Get all video IDs from members-only playlist"""
-			print(f"{m.bcolors.WARNING}Fetching playlist videos...{m.bcolors.ENDC}")
+			# print(f"{m.bcolors.WARNING}Fetching playlist videos...{m.bcolors.ENDC}")
 			video_ids = []
 			try:
 				request = yt.playlistItems().list(part="snippet", playlistId=playlist_id, maxResults=50)
@@ -103,9 +103,9 @@ if __name__ == "__main__":
 				return []
 
 		dna = load_dna()
-		ctypes.windll.kernel32.SetConsoleTitleW("YouTube Excluded IDs Manager")
+		ctypes.windll.kernel32.SetConsoleTitleW("DNA")
 		print(m.ERASE_ABOVE.strip(), end="")
-		print(f"{m.bcolors.WARNING}{len(dna):,} excluded IDs loaded.")
+		print(f"{m.bcolors.WARNING}{len(dna):,} IDs loaded.")
 
 		print(f'{m.bcolors.OKCYAN}Enter YouTube ID/link/channel URL/members-only playlist ("n" to exit): {m.bcolors.ENDC}')
 
@@ -128,7 +128,7 @@ if __name__ == "__main__":
 			playlist_match = members_playlist_regex.search(input_str)
 			if playlist_match:
 				pl_id = playlist_match.group(1)
-				print(f"{m.bcolors.OKCYAN}Processing members-only playlist: {pl_id}{m.bcolors.ENDC}")
+				print(f"{m.bcolors.OKCYAN}Members-only playlist: {pl_id}{m.bcolors.ENDC}")
 
 				video_ids = get_playlist_video_ids(pl_id)
 				if not video_ids:
@@ -147,7 +147,7 @@ if __name__ == "__main__":
 					save_dna(new_ids)
 					dna.update(new_ids)
 					print(f"{m.bcolors.OKGREEN}Added {len(new_ids)} new IDs from playlist{m.bcolors.ENDC}")
-					print(f"{m.bcolors.OKCYAN}Total excluded IDs: {len(dna):,}{m.bcolors.ENDC}")
+					# print(f"{m.bcolors.OKCYAN}Total excluded IDs: {len(dna):,}{m.bcolors.ENDC}")
 				else:
 					print(f"{m.bcolors.WARNING}All {len(video_ids)} IDs already excluded{m.bcolors.ENDC}")
 				continue
@@ -155,15 +155,15 @@ if __name__ == "__main__":
 			# check for channel url/handle first
 			channel_id = get_channel_id_from_handle_or_url(input_str, API_KEY)
 			if channel_id:
-				print(f"{m.bcolors.OKCYAN}Found channel ID: {channel_id}{m.bcolors.ENDC}")
 				members_pl_id = get_members_playlist_id(channel_id)
+				print(f"{m.bcolors.OKCYAN}{input_str} ({channel_id}, {members_pl_id}){m.bcolors.ENDC}")
 
 				if members_pl_id:
-					print(f"{m.bcolors.OKCYAN}Members-only playlist: {members_pl_id}{m.bcolors.ENDC}")
+					# print(f"{m.bcolors.OKCYAN}Members-only playlist: {members_pl_id}{m.bcolors.ENDC}")
 					video_ids = get_playlist_video_ids(members_pl_id)
 
 					if not video_ids:
-						print(f"{m.bcolors.WARNING}No members-only videos found for this channel{m.bcolors.ENDC}")
+						# print(f"{m.bcolors.WARNING}No members-only videos found for this channel{m.bcolors.ENDC}")
 						continue
 
 					# filter out existing dna entries and preserve order
@@ -178,7 +178,8 @@ if __name__ == "__main__":
 						save_dna(new_ids)
 						dna.update(new_ids)
 						print(f"{m.bcolors.OKGREEN}Added {len(new_ids)} new members-only IDs{m.bcolors.ENDC}")
-						print(f"{m.bcolors.OKCYAN}Total excluded IDs: {len(dna):,}{m.bcolors.ENDC}")
+						print(f"{m.bcolors.OKGREEN}{new_ids[:100]}{m.bcolors.ENDC}")
+						# print(f"{m.bcolors.OKCYAN}Total excluded IDs: {len(dna):,}{m.bcolors.ENDC}")
 					else:
 						print(f"{m.bcolors.WARNING}All {len(video_ids)} members-only IDs already excluded{m.bcolors.ENDC}")
 				else:
