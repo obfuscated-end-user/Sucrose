@@ -349,7 +349,8 @@ class Basic(commands.Cog):
 				},
 				json={
 					# "meta-llama/llama-3.2-1b-instruct:free"
-					"model": "mistralai/devstral-2512:free",
+					# "model": "mistralai/devstral-2512:free",
+					"model": "openai/gpt-oss-120b:free",
 					"messages": [
 						{
 							"role": "system",
@@ -371,6 +372,7 @@ class Basic(commands.Cog):
 					await ctx.respond(
 						"Something went wrong and I didn't catch that... Let "
 						f"me check my alchemy notes!\nSTATUS: {resp.status}"
+						f"{resp}"
 					)
 					return
 				data = await resp.json()
