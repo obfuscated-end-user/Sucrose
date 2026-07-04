@@ -269,7 +269,13 @@ def process_ids():
 						with open(f"{m.dir_path}/ignore/dna.txt", "a", encoding="utf-8") as f:
 							f.write(dna_string)
 
-			asyncio.run(main_mode3())
+			while True:
+				try:
+					asyncio.run(main_mode3())
+					break
+				except (asyncio.TimeoutError, aiohttp.ClientError) as e:
+					m.print_with_timestamp(f"{e}\nSomething went wrong, retrying in 5 seconds...")
+					time.sleep(5)
 
 			ids_removed += len(del_ids)
 			m.print_with_timestamp(
