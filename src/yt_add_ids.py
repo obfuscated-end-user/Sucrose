@@ -75,6 +75,15 @@ if __name__ == "__main__":
 		# do not add list, most of these are member-restricted videos, videos
 		# that contain personally identifiable information, etc.
 		dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
+		path = f"{m.dir_path}/ignore/yt_ids.txt"
+		with open(path, "r", encoding="utf-8") as f:
+			yt_ids = [line.strip() for line in f if line.strip()]
+		removed_ids = [yid for yid in yt_ids if yid in dna]
+		new_ids = [yid for yid in yt_ids if yid not in dna]
+		if len(new_ids) != len(yt_ids):
+			with open(path, "w", encoding="utf-8") as f:
+				f.write("\n".join(new_ids))
+			yt_ids_list = set(new_ids)
 		cached_set = m.load_cache_set()
 		print(m.ERASE_ABOVE.strip(), end="")
 		print("Processing indices...")
@@ -83,23 +92,13 @@ if __name__ == "__main__":
 		print(m.ERASE_ABOVE.strip(), end="")
 		print("Finding duplicates...")
 		dupes = m.find_dupes(0)
-		print(
-			f"{len(yt_ids_list):,} IDs - {deep_getsizeof(yt_ids_list):,} "
-			"bytes in memory loaded."
-		)
-		dna_remove = [yid for yid in yt_ids_list if yid in dna]
-		dna_remove_str = f"({dna_remove[0]}\\n?)" if len(dna_remove) == 1 \
-			else "(" + "".join([f"{yid}\\n?|" for yid in dna_remove])[:-1] + ")"
-		if dna_remove_str != "()":
-			print(f"\n{m.bcolors.WARNING}REMOVE THESE!{m.bcolors.ENDC}")
-			print(f"{m.bcolors.FAIL}{dna_remove_str}{m.bcolors.ENDC}\n")
-			subprocess.run("clip", input=dna_remove_str, check=True, encoding="utf-8")
+		print(f"{len(yt_ids_list):,} IDs - {deep_getsizeof(yt_ids_list):,} bytes in memory loaded.")
+		if removed_ids:
+			print(f"\n{m.bcolors.WARNING}REMOVED{m.bcolors.ENDC}")
+			print(f"{m.bcolors.FAIL}{removed_ids}{m.bcolors.ENDC}\n")
 		end = time.time()
 		print(f"Done! Time taken to analyze IDs: {end - start}{m.bcolors.ENDC}")
-		print(
-			f'{m.bcolors.OKCYAN}Enter YouTube ID/link/playlist ("n" to exit): '
-			f"{m.bcolors.ENDC}"
-		)
+		print(f'{m.bcolors.OKCYAN}Enter YouTube ID/link/playlist ("n" to exit): {m.bcolors.ENDC}')
 
 		yt_id_regex = re.compile("(?:(?<=^)|(?<==)|(?<=/))([\w_\-]{11})(?=(&|$))")
 		yt_playlist_regex = re.compile(m.YT_PLAYLIST_ID_REGEX)
@@ -119,7 +118,7 @@ if __name__ == "__main__":
 
 
 		def process_video_item(yid, pl_item, counter, yt_ids_list, yt_ids_index, dna):
-			"""Process single video item and return status dict"""
+			"""Process single video item and return status dict."""
 			global dupe_del, show_remove_msg
 			if yid not in yt_ids_list:
 				if pl_item["snippet"]["title"] == "Deleted video":
@@ -162,7 +161,7 @@ if __name__ == "__main__":
 
 
 		def print_batch(batch):
-			"""Print batch of status lines at once"""
+			"""Print batch of status lines at once."""
 			print("\n".join([item["display"] for item in batch]))
 
 
