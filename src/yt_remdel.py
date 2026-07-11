@@ -66,11 +66,7 @@ def process_ids():
 			elif (mode == 3):
 				range_end = int(input("Enter an int (don't make it too large): "))
 				break
-			elif (mode < 1):
-				# these too
-				lol = 1 / 0
-				break
-			elif (mode > 3):
+			else:
 				lol = 1 / 0
 				break
 		except:
@@ -130,6 +126,7 @@ def process_ids():
 				"This video has been removed for violating YouTube's policy on spam, deceptive practices, and scams",
 				"This video has been removed for violating YouTube's policy on violent or graphic content",
 				"This video has been removed by the uploader",
+				"It was removed following a copyright removal request by",
 				"This video isn't available anymore",
 				# "This video is unavailable", # this doesn't work
 			]
@@ -276,10 +273,16 @@ def process_ids():
 				except (asyncio.TimeoutError, aiohttp.ClientError) as e:
 					m.print_with_timestamp(f"{e}\nSomething went wrong, retrying in 5 seconds...")
 					time.sleep(5)
+					
+					
+			del_ids_formatted_str = "\n".join([
+				f"{del_id[0]}. {del_id[1]} - {del_id[2]}"
+				for del_id in sorted(del_ids, key=lambda x: x[0])
+			])
 
 			ids_removed += len(del_ids)
 			m.print_with_timestamp(
-				f"{del_ids[:20]}\n"
+				f"\n{del_ids_formatted_str}\n\n"
 				f"REMOVED IN THIS BATCH: {len(del_ids)}\n"
 				f"TOTAL IDS REMOVED: {ids_removed}\n"
 				f"REMAINING TO CHECK: {len(working_set)}\n"
