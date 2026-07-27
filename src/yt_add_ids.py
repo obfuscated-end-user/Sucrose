@@ -352,7 +352,7 @@ if __name__ == "__main__":
 								f"{m.bcolors.HEADER}"
 								f"{datetime.now().strftime(m.DATE_FORMAT)}"
 								f"{m.bcolors.ENDC} {m.bcolors.UNDERLINE}"
-								f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC} "
+								f"{m.bcolors.FAIL}{yid}{m.bcolors.ENDC} "
 								f"{m.bcolors.FAIL}(SKIPPED){m.bcolors.ENDC}"
 							)
 						elif yid not in yt_ids_list:
@@ -379,7 +379,7 @@ if __name__ == "__main__":
 								f"{m.bcolors.HEADER}"
 								f"{datetime.now().strftime(m.DATE_FORMAT)}"
 								f"{m.bcolors.ENDC} {m.bcolors.UNDERLINE}"
-								f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC}"
+								f"{m.bcolors.OKCYAN}{yid}{m.bcolors.ENDC}"
 								f"{m.bcolors.WARNING} ({yt_ids_index.get(yid)})"
 								f"{m.bcolors.ENDC}"
 							)

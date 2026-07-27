@@ -19,7 +19,7 @@ DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 ERASE_ABOVE = "\033[1A\x1b[2K" # https://en.wikipedia.org/wiki/ANSI_escape_code
 SUCROSE_IMAGE = os.getenv("SUCROSE_IMAGE")
 YT_VIDEO_ID_REGEX = "^([\w-]{11})$"
-YT_PLAYLIST_ID_REGEX = "([\w-]{41}|[\w-]{34}|[\w-]{24}|[\w-]{18})"
+YT_PLAYLIST_ID_REGEX = "([\w-]{41}|[\w-]{34}|[\w-]{24}|[\w-]{18}|[\w-]{13})"
 YT_IDS_FILE_PATH = f"{dir_path}/ignore/yt_ids.txt"
 
 yt_link_formats = [
