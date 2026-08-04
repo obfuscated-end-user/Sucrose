@@ -187,7 +187,7 @@ if __name__ == "__main__":
 				)
 				response2 = request.execute()
 				if "items" in response2 and len(response2["items"]) > 0:
-					print(f"TITLE: {m.bcolors.OKGREEN}{response2['items'][0]['snippet']['title']}{m.bcolors.ENDC}")
+					print(f"TITLE: {m.bcolors.OKGREEN}{response2['items'][0]['snippet']['title']} {m.bcolors.OKCYAN}({pl_id}){m.bcolors.ENDC}")
 
 				response1 = items.list(part="snippet", playlistId=pl_id, maxResults=50)
 				counter = 1
@@ -198,6 +198,10 @@ if __name__ == "__main__":
 				cached_set_temp = set()
 				BATCH_SIZE = 50
 
+				"""
+				this stops working on very specific playlists, see if you can find a fix for it
+				try adding a dummy id at the end to see if it prevents this from doing that
+				"""
 				while response1:
 					pl_response = response1.execute()
 					for pl_item in pl_response["items"]:
