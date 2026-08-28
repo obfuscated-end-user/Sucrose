@@ -6,7 +6,7 @@ import sys
 import time
 import traceback
 import requests
-from collections import OrderedDict
+# from collections import OrderedDict
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 import morefunc as m
@@ -71,10 +71,12 @@ if __name__ == "__main__":
 
 
 		print(f"{m.bcolors.WARNING}Processing IDs list...")
-		yt_ids_list = set(m.load_yt_id_file())
+		# yt_ids_list = set(m.load_yt_id_file())
+		yt_ids_list = {sys.intern(yid) for yid in m.load_yt_id_file()}
 		# do not add list, most of these are member-restricted videos, videos
 		# that contain personally identifiable information, etc.
-		dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
+		# dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
+		dna = {sys.intern(yid) for yid in m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt")}
 		path = f"{m.dir_path}/ignore/yt_ids.txt"
 		with open(path, "r", encoding="utf-8") as f:
 			yt_ids = [line.strip() for line in f if line.strip()]
@@ -84,7 +86,8 @@ if __name__ == "__main__":
 			with open(path, "w", encoding="utf-8") as f:
 				f.write("\n".join(new_ids))
 			yt_ids_list = set(new_ids)
-		cached_set = m.load_cache_set()
+		# cached_set = m.load_cache_set()
+		cached_set = {sys.intern(yid) for yid in m.load_cache_set()}
 		print(m.ERASE_ABOVE.strip(), end="")
 		print("Processing indices...")
 		yt_ids_index = load_yt_ids_with_lines(f"{m.dir_path}/ignore/yt_ids.txt")
@@ -191,7 +194,7 @@ if __name__ == "__main__":
 
 				response1 = items.list(part="snippet", playlistId=pl_id, maxResults=50)
 				counter = 1
-				dni = []
+				dni = set()
 				dupe_del = []
 				dna_new = []
 				batch_buffer = []
@@ -205,7 +208,8 @@ if __name__ == "__main__":
 				while response1:
 					pl_response = response1.execute()
 					for pl_item in pl_response["items"]:
-						yid = pl_item["snippet"]["resourceId"]["videoId"]
+						# yid = pl_item["snippet"]["resourceId"]["videoId"]
+						yid = sys.intern(pl_item["snippet"]["resourceId"]["videoId"])
 						status_info = process_video_item(yid, pl_item, counter, yt_ids_list, yt_ids_index, dna)
 						batch_buffer.append(status_info)
 						if status_info["action"] == "yield":
@@ -215,7 +219,7 @@ if __name__ == "__main__":
 								cached_set.add(yid)
 								cached_set_temp.add(yid)
 						elif status_info["action"] == "dni":
-							dni.append(yid)
+							dni.add(yid)
 							if yid not in cached_set:
 								cached_set.add(yid)
 								cached_set_temp.add(yid)
@@ -312,7 +316,7 @@ if __name__ == "__main__":
 					items = yt.playlistItems()
 					new_ids = []
 					included_id_count = 0
-					pl = list(OrderedDict.fromkeys(get_ids_from_playlist(
+					pl = list(dict.fromkeys(get_ids_from_playlist(
 						yt, items, pl_id)))
 					print()
 					final_write_string = ""
