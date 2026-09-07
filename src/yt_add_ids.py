@@ -6,7 +6,6 @@ import sys
 import time
 import traceback
 import requests
-# from collections import OrderedDict
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 import morefunc as m
@@ -21,11 +20,7 @@ if __name__ == "__main__":
 		API_KEY = os.getenv("YOUTUBE_DATA_API_V3")
 		YOUTUBE_API_SERVICE_NAME = "youtube"
 		YOUTUBE_API_VERSION = "v3"
-		yt = build(
-			YOUTUBE_API_SERVICE_NAME,
-			YOUTUBE_API_VERSION,
-			developerKey=API_KEY
-		)
+		yt = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, developerKey=API_KEY)
 
 		def load_yt_ids_with_lines(path):
 			"""{"id": index}"""
@@ -42,15 +37,12 @@ if __name__ == "__main__":
 			seen = set()
 			size = 0
 			queue = deque([obj])
-
 			while queue:
 				o = queue.popleft()
 				if id(o) in seen:
 					continue
 				seen.add(id(o))
-
 				size += sys.getsizeof(o)
-
 				if isinstance(o, dict):
 					queue.extend(o.keys())
 					queue.extend(o.values())
@@ -71,11 +63,9 @@ if __name__ == "__main__":
 
 
 		print(f"{m.bcolors.WARNING}Processing IDs list...")
-		# yt_ids_list = set(m.load_yt_id_file())
 		yt_ids_list = {sys.intern(yid) for yid in m.load_yt_id_file()}
 		# do not add list, most of these are member-restricted videos, videos
 		# that contain personally identifiable information, etc.
-		# dna = set(m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt"))
 		dna = {sys.intern(yid) for yid in m.load_yt_id_file(f"{m.dir_path}/ignore/dna.txt")}
 		path = f"{m.dir_path}/ignore/yt_ids.txt"
 		with open(path, "r", encoding="utf-8") as f:
@@ -86,7 +76,6 @@ if __name__ == "__main__":
 			with open(path, "w", encoding="utf-8") as f:
 				f.write("\n".join(new_ids))
 			yt_ids_list = set(new_ids)
-		# cached_set = m.load_cache_set()
 		cached_set = {sys.intern(yid) for yid in m.load_cache_set()}
 		print(m.ERASE_ABOVE.strip(), end="")
 		print("Processing indices...")
@@ -116,7 +105,6 @@ if __name__ == "__main__":
 		def assert_id_list_length():
 			with open(f"{m.dir_path}/ignore/yt_ids.txt", "rb") as f:
 				num_lines = sum(1 for _ in f)
-
 			return len(yt_ids_list) == num_lines
 
 
@@ -184,9 +172,7 @@ if __name__ == "__main__":
 			try:
 				print(f"{m.bcolors.WARNING}This might take a while...{m.bcolors.ENDC}")
 				request = youtube.playlists().list(
-					part="snippet",
-					id=pl_id,
-					fields="items(snippet(title))"
+					part="snippet", id=pl_id, fields="items(snippet(title))"
 				)
 				response2 = request.execute()
 				if "items" in response2 and len(response2["items"]) > 0:
@@ -208,7 +194,6 @@ if __name__ == "__main__":
 				while response1:
 					pl_response = response1.execute()
 					for pl_item in pl_response["items"]:
-						# yid = pl_item["snippet"]["resourceId"]["videoId"]
 						yid = sys.intern(pl_item["snippet"]["resourceId"]["videoId"])
 						status_info = process_video_item(yid, pl_item, counter, yt_ids_list, yt_ids_index, dna)
 						batch_buffer.append(status_info)
@@ -262,8 +247,7 @@ if __name__ == "__main__":
 		csi = 1
 		while continue_input != "n":
 			input_str = input(
-				f"{m.bcolors.HEADER}{datetime.now().strftime(m.DATE_FORMAT)}"
-				f"{m.bcolors.ENDC} "
+				f"{m.bcolors.HEADER}{datetime.now().strftime(m.DATE_FORMAT)}{m.bcolors.ENDC} "
 			)
 			input_str = re.sub("(&pp|\?si)=[\w%].*", "", input_str)
 			# skip these because they appear often enough when you do it
@@ -283,6 +267,11 @@ if __name__ == "__main__":
 				handle_match = yt_handle_regex.search(input_str)
 				if handle_match:
 					handle = handle_match.group(1)
+				elif input_str.startswith("@"):
+					handle = input_str[1:].strip()
+				else:
+					handle = None
+				if handle:
 					try:
 						url = f"https://www.googleapis.com/youtube/v3/channels?part=id&forHandle={handle}&key={API_KEY}"
 						response = requests.get(url)
@@ -316,8 +305,7 @@ if __name__ == "__main__":
 					items = yt.playlistItems()
 					new_ids = []
 					included_id_count = 0
-					pl = list(dict.fromkeys(get_ids_from_playlist(
-						yt, items, pl_id)))
+					pl = list(dict.fromkeys(get_ids_from_playlist(yt, items, pl_id)))
 					print()
 					final_write_string = ""
 					for yid in pl:
@@ -364,9 +352,7 @@ if __name__ == "__main__":
 								f"{m.bcolors.FAIL}(SKIPPED){m.bcolors.ENDC}"
 							)
 						elif yid not in yt_ids_list:
-							with open(
-								f"{m.dir_path}/ignore/yt_ids.txt", "a"
-							) as f:
+							with open(f"{m.dir_path}/ignore/yt_ids.txt", "a") as f:
 								f.write(f"\n{yid}")
 							yt_ids_list.add(yid)
 							# mandatory compromise
@@ -402,8 +388,5 @@ if __name__ == "__main__":
 		instance.stop()
 
 	except m.SingleInstanceError:
-		print(
-			f"Another instance is already running. "
-			f"{sys.argv[0].split(chr(92))[-1]}"
-		)
+		print(f"Another instance is already running. {sys.argv[0].split(chr(92))[-1]}")
 		sys.exit(1)
