@@ -264,6 +264,8 @@ if __name__ == "__main__":
 			try:
 				print(m.ERASE_ABOVE.strip(), end="")
 				# check if input contains a handle (@username)
+				# try to find a way to process more than 20000 videos, which is youtube's hard limit
+				# magic number
 				handle_match = yt_handle_regex.search(input_str)
 				if handle_match:
 					handle = handle_match.group(1)
