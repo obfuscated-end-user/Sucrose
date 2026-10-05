@@ -276,7 +276,7 @@ def process_ids():
 					
 					
 			del_ids_formatted_str = "\n".join([
-				f"{del_id[0]}. {del_id[1]} - {del_id[2]}"
+				f"{m.bcolors.WARNING}{del_id[0]} {m.bcolors.FAIL}{del_id[1]} {m.bcolors.HEADER}{del_id[2]}{m.bcolors.ENDC}"
 				for del_id in sorted(del_ids, key=lambda x: x[0])
 			])
 
