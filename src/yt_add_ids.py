@@ -82,8 +82,10 @@ if __name__ == "__main__":
 		yt_ids_index = load_yt_ids_with_lines(f"{m.dir_path}/ignore/yt_ids.txt")
 		ctypes.windll.kernel32.SetConsoleTitleW("YouTube ID Manager")
 		print(m.ERASE_ABOVE.strip(), end="")
-		print("Finding duplicates...")
-		dupes = m.find_dupes(0)
+		# uncomment this if you think there are duplicates
+		# this may make the program load up twice as long though
+		# print("Finding duplicates...")
+		# dupes = m.find_dupes(0)
 		print(f"{len(yt_ids_list):,} IDs - {deep_getsizeof(yt_ids_list):,} bytes in memory loaded.")
 		if removed_ids:
 			print(f"\n{m.bcolors.WARNING}REMOVED{m.bcolors.ENDC}")
