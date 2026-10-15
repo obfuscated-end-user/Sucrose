@@ -224,47 +224,59 @@ def process_ids():
 			# main() specifically made for this mode
 			async def main_mode3():
 				nonlocal cached_set
-				dna_string = ""
-				newly_processed = set()
 				async with aiohttp.ClientSession(
-					connector=aiohttp.TCPConnector(limit=50)) as session:
-					# check availability
+					connector=aiohttp.TCPConnector(limit=50)
+				) as session:
 					m.print_with_timestamp("Checking if IDs are available...")
-					t1 = [is_id_available(yid, session) for idx, yid in ids_to_check]
-					r1 = await asyncio.gather(*t1)
-
-					del_ids_temp = []
-					for (idx, yid), (is_deleted, indicator) in zip(ids_to_check, r1):
-						if is_deleted:
-							del_ids_temp.append((idx, yid, indicator))
-						else:
-							newly_processed.add(yid)
-
-					# check private
-					if del_ids_temp:
+					# check every ID, an exception aborts the batch
+					r1 = await asyncio.gather(*[
+						is_id_available(yid, session)
+						for idx, yid in ids_to_check
+					])
+					batch_deleted_candidates = [
+						(idx, yid, indicator)
+						for (idx, yid), (is_deleted, indicator)
+						in zip(ids_to_check, r1)
+						if is_deleted
+					]
+					# only IDs not flagged as unavailable can be cached
+					batch_survivors = {
+						yid
+						for (idx, yid), (is_deleted, indicator)
+						in zip(ids_to_check, r1)
+						if not is_deleted
+					}
+					# verify suspected deleted IDs.
+					batch_deleted = []
+					batch_dna = set()
+					if batch_deleted_candidates:
 						m.print_with_timestamp("Checking if IDs are private...")
-						t2 = [is_id_private(yid, session) for idx, yid, indicator in del_ids_temp]
-						r2 = await asyncio.gather(*t2)
-
-						for (idx, yid, indicator), is_private in zip(del_ids_temp, r2):
-							# only keep truly deleted (not private)
-							if is_private:
-								del_ids.append((idx, yid, indicator))
+						r2 = await asyncio.gather(*[
+							is_id_private(yid, session)
+							for idx, yid, indicator in batch_deleted_candidates
+						])
+						for (idx, yid, indicator), is_deleted in zip(
+							batch_deleted_candidates, r2
+						):
+							if is_deleted:
+								batch_deleted.append((idx, yid, indicator))
 								if yid not in dna:
-									dna.add(yid)
-									dna_string += f"\n{yid}"
+									batch_dna.add(yid)
+					# commit results only after all network checks succeeded
+					# never cache IDs classified as deleted
+					deleted_ids = {yid for _, yid, _ in batch_deleted}
+					batch_survivors.difference_update(deleted_ids)
+					m.save_cache_update(batch_survivors, cached_set)
+					del_ids.extend(batch_deleted)
+					if batch_dna:
+						with open(
+							f"{m.dir_path}/ignore/dna.txt",
+							"a",
+							encoding="utf-8"
+						) as f:
+							f.write("".join(f"\n{yid}" for yid in batch_dna))
+					dna.update(batch_dna)
 
-					# cache survivors
-					m.save_cache_update(newly_processed, cached_set)
-
-					# update already_processed with survivors from this batch
-					# batch_ids = set(yid for _, yid in ids_to_check)
-					# survivors = batch_ids - set(yid for _, yid, _ in del_ids)
-					# already_processed.update(survivors)
-
-					if dna_string:
-						with open(f"{m.dir_path}/ignore/dna.txt", "a", encoding="utf-8") as f:
-							f.write(dna_string)
 
 			while True:
 				try:
