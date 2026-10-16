@@ -230,23 +230,18 @@ def process_ids():
 					m.print_with_timestamp("Checking if IDs are available...")
 					# check every ID, an exception aborts the batch
 					r1 = await asyncio.gather(*[
-						is_id_available(yid, session)
-						for idx, yid in ids_to_check
+						is_id_available(yid, session) for idx, yid in ids_to_check
 					])
 					batch_deleted_candidates = [
-						(idx, yid, indicator)
-						for (idx, yid), (is_deleted, indicator)
-						in zip(ids_to_check, r1)
-						if is_deleted
+						(idx, yid, indicator) for (idx, yid), (is_deleted, indicator)
+						in zip(ids_to_check, r1) if is_deleted
 					]
 					# only IDs not flagged as unavailable can be cached
 					batch_survivors = {
-						yid
-						for (idx, yid), (is_deleted, indicator)
-						in zip(ids_to_check, r1)
-						if not is_deleted
+						yid for (idx, yid), (is_deleted, indicator)
+						in zip(ids_to_check, r1) if not is_deleted
 					}
-					# verify suspected deleted IDs.
+					# verify suspected deleted IDs
 					batch_deleted = []
 					batch_dna = set()
 					if batch_deleted_candidates:
@@ -255,9 +250,7 @@ def process_ids():
 							is_id_private(yid, session)
 							for idx, yid, indicator in batch_deleted_candidates
 						])
-						for (idx, yid, indicator), is_deleted in zip(
-							batch_deleted_candidates, r2
-						):
+						for (idx, yid, indicator), is_deleted in zip(batch_deleted_candidates, r2):
 							if is_deleted:
 								batch_deleted.append((idx, yid, indicator))
 								if yid not in dna:
@@ -269,11 +262,7 @@ def process_ids():
 					m.save_cache_update(batch_survivors, cached_set)
 					del_ids.extend(batch_deleted)
 					if batch_dna:
-						with open(
-							f"{m.dir_path}/ignore/dna.txt",
-							"a",
-							encoding="utf-8"
-						) as f:
+						with open(f"{m.dir_path}/ignore/dna.txt", "a", encoding="utf-8") as f:
 							f.write("".join(f"\n{yid}" for yid in batch_dna))
 					dna.update(batch_dna)
 
@@ -285,8 +274,7 @@ def process_ids():
 				except (asyncio.TimeoutError, aiohttp.ClientError) as e:
 					m.print_with_timestamp(f"{e}\nSomething went wrong, retrying in 5 seconds...")
 					time.sleep(5)
-					
-					
+
 			del_ids_formatted_str = "\n".join([
 				(f"{m.bcolors.WARNING}{del_id[0]} {m.bcolors.FAIL}{del_id[1]} "
 				f"{m.bcolors.HEADER}{del_id[2]}{m.bcolors.ENDC}")
@@ -350,17 +338,10 @@ def process_ids():
 		)
 
 	end = time.time()
-	print(
-		f"Time taken (in seconds): {end - start}, "
-		f"range: {range_start} to {range_end}\nDone!\a"
-	)
-
+	print(f"Time taken (in seconds): {end - start}, range: {range_start} to {range_end}\nDone!\a")
 	ctypes.windll.user32.FlashWindow(
-		ctypes.windll.user32.GetParent(
-			ctypes.windll.kernel32.GetConsoleWindow()),
-		True
+		ctypes.windll.user32.GetParent(ctypes.windll.kernel32.GetConsoleWindow()), True
 	)
-
 	instance.stop()
 
 
@@ -372,8 +353,5 @@ if __name__ == "__main__":
 			if again not in ("y", "yes"):
 				break
 	except m.SingleInstanceError:
-		print(
-			f"Another instance is already running. "
-			f"{sys.argv[0].split(chr(92))[-1]}"
-		)
+		print(f"Another instance is already running. {sys.argv[0].split(chr(92))[-1]}")
 		sys.exit(1)
