@@ -96,10 +96,7 @@ def process_ids():
 		available, (False, "") otherwise.
 		"""
 		video_url = m.yt_link_formats[2] + yid
-		async with session.get(
-			video_url,
-			headers=HEADERS
-		) as video_response:
+		async with session.get(video_url, headers=HEADERS) as video_response:
 			if video_response.status != 200:
 				return True, f"HTTP Status {video_response.status}"
 			text = await video_response.text()
@@ -145,10 +142,7 @@ def process_ids():
 		Check if ID is private.
 		"""
 		video_url = m.yt_link_formats[2] + yid
-		async with session.get(
-			video_url,
-			headers=HEADERS
-		) as video_response:
+		async with session.get(video_url, headers=HEADERS) as video_response:
 			if video_response.status != 200:
 				return True
 			text = await video_response.text()
@@ -166,8 +160,7 @@ def process_ids():
 		nonlocal cached_set
 		dna_string = ""
 		newly_processed = set()
-		async with aiohttp.ClientSession(
-			connector=aiohttp.TCPConnector(limit=50)) as session:
+		async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=50)) as session:
 			m.print_with_timestamp("Checking if IDs are available...")
 			del_ids_temp.clear()
 			t1 = [is_id_available(yid, session) for idx, yid in indexed_ids]
@@ -229,9 +222,9 @@ def process_ids():
 				) as session:
 					m.print_with_timestamp("Checking if IDs are available...")
 					# check every ID, an exception aborts the batch
-					r1 = await asyncio.gather(*[
-						is_id_available(yid, session) for idx, yid in ids_to_check
-					])
+					r1 = await asyncio.gather(
+						*[is_id_available(yid, session) for idx, yid in ids_to_check]
+					)
 					batch_deleted_candidates = [
 						(idx, yid, indicator) for (idx, yid), (is_deleted, indicator)
 						in zip(ids_to_check, r1) if is_deleted
@@ -246,10 +239,10 @@ def process_ids():
 					batch_dna = set()
 					if batch_deleted_candidates:
 						m.print_with_timestamp("Checking if IDs are private...")
-						r2 = await asyncio.gather(*[
-							is_id_private(yid, session)
-							for idx, yid, indicator in batch_deleted_candidates
-						])
+						r2 = await asyncio.gather(
+							*[is_id_private(yid, session)
+							for idx, yid, indicator in batch_deleted_candidates]
+						)
 						for (idx, yid, indicator), is_deleted in zip(batch_deleted_candidates, r2):
 							if is_deleted:
 								batch_deleted.append((idx, yid, indicator))
