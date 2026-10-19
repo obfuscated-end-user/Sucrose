@@ -202,14 +202,14 @@ if __name__ == "__main__":
 						if status_info["action"] == "yield":
 							if yid not in dni:
 								yield yid
-							if yid not in cached_set:
+							if yid not in dna and yid not in cached_set:
 								cached_set.add(yid)
 								cached_set_temp.add(yid)
 						elif status_info["action"] == "dni":
 							dni.add(yid)
-							if yid not in cached_set:
-								cached_set.add(yid)
-								cached_set_temp.add(yid)
+							# if yid not in cached_set:
+								# cached_set.add(yid)
+								# cached_set_temp.add(yid)
 						counter += 1
 						if len(batch_buffer) >= BATCH_SIZE:
 							print_batch(batch_buffer)
@@ -343,7 +343,7 @@ if __name__ == "__main__":
 				if video_match:
 					yid = video_match.group(1)
 					if re.match(m.YT_VIDEO_ID_REGEX, yid):
-						if yid not in cached_set:
+						if yid not in dna and yid not in cached_set:
 							cached_set.add(yid)
 							with open(f"{m.dir_path}/ignore/cache.txt", "a", encoding="utf-8") as f:
 								f.write(f"\n{yid}")
