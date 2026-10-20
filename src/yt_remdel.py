@@ -102,7 +102,7 @@ def process_ids():
 			text = await video_response.text()
 			m.print_with_timestamp(f"{yid}{m.ERASE_ABOVE.strip()}")
 			# i know this could be made smaller, but having the exact string makes it more, i don't
-			# know, fool-proof? youtube doesn't preventyou on making your video title literally say
+			# know, fool-proof? youtube doesn't prevent you on making your video title literally say
 			# "This video has been removed for violating YouTube's policy on nudity or sexual
 			# content".
 			# i think the only time that this would be a false flag is that if a video has the exact
