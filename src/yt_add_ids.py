@@ -1,4 +1,5 @@
 import ctypes
+import httplib2
 import os
 import re
 import subprocess
@@ -23,8 +24,15 @@ if __name__ == "__main__":
 		YOUTUBE_API_VERSION = "v3"
 		# make stalled network operations time out instead of waiting indefinitely
 		# this must be set before creating the YouTube API client
-		socket.setdefaulttimeout(5)
-		yt = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, developerKey=API_KEY)
+		# socket.setdefaulttimeout(5)
+		HTTP_TIMEOUT = 5
+		http = httplib2.Http(timeout=HTTP_TIMEOUT)
+		yt = build(
+			YOUTUBE_API_SERVICE_NAME,
+			YOUTUBE_API_VERSION,
+			developerKey=API_KEY,
+			http=http
+		)
 
 		def load_yt_ids_with_lines(path):
 			"""{"id": index}"""
@@ -57,12 +65,9 @@ if __name__ == "__main__":
 
 		def clean_input(prompt=""):
 			"""Handles long pasted links without wrapping artifacts."""
-			# single-line prompt
-			print(prompt, end="", flush=True)
-			# let terminal handle input naturally
-			result = input()
-			# clear prompt line after enter
-			print(m.ERASE_ABOVE.strip(), end="")
+			print(prompt, end="", flush=True)		# single-line prompt
+			result = input()						# let terminal handle input naturally
+			print(m.ERASE_ABOVE.strip(), end="")	# clear prompt line after enter
 			return result
 
 
@@ -196,9 +201,15 @@ if __name__ == "__main__":
 				"""
 				this stops working on very specific playlists, see if you can find a fix for it
 				try adding a dummy id at the end to see if it prevents this from doing that
+				2026/10/26: this was a pagination-related bug and is now fixed
 				"""
 				while response1:
 					pl_response = response1.execute()
+					page_items = pl_response.get("items", [])
+					# stop if the API returned an empty page
+					# this prevents repeatedly requesting pages without progress
+					if not page_items:
+						break
 					for pl_item in pl_response["items"]:
 						yid = sys.intern(pl_item["snippet"]["resourceId"]["videoId"])
 						status_info = process_video_item(yid, pl_item, counter, yt_ids_list, yt_ids_index, dna)
@@ -221,8 +232,8 @@ if __name__ == "__main__":
 					if batch_buffer:
 						print_batch(batch_buffer)
 						batch_buffer = []
-					response1 = youtube.playlistItems().list_next(response1, pl_response)
 					OVERALL = counter - 1
+					response1 = youtube.playlistItems().list_next(response1, pl_response)
 
 				if cached_set_temp:
 					with open(f"{m.dir_path}/ignore/cache.txt", "a", encoding="utf-8") as f:
