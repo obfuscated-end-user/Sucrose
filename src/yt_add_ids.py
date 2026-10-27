@@ -1,5 +1,4 @@
 import ctypes
-import httplib2
 import os
 import re
 import subprocess
@@ -7,7 +6,6 @@ import sys
 import time
 import traceback
 import requests
-import socket
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 import morefunc as m
@@ -25,13 +23,10 @@ if __name__ == "__main__":
 		# make stalled network operations time out instead of waiting indefinitely
 		# this must be set before creating the YouTube API client
 		# socket.setdefaulttimeout(5)
-		HTTP_TIMEOUT = 5
-		http = httplib2.Http(timeout=HTTP_TIMEOUT)
 		yt = build(
 			YOUTUBE_API_SERVICE_NAME,
 			YOUTUBE_API_VERSION,
-			developerKey=API_KEY,
-			http=http
+			developerKey=API_KEY
 		)
 
 		def load_yt_ids_with_lines(path):
