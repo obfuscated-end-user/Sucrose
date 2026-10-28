@@ -238,7 +238,7 @@ if __name__ == "__main__":
 				for yid in dna_new:
 					dna.add(yid)
 				if dna_new:
-					with open(f"{m.dir_path}/ignore/dna.txt", "a") as f:
+					with open(f"{m.dir_path}/ignore/dna.txt", "a", encoding="utf-8") as f:
 						f.write("\n" + "\n".join(dna_new))
 
 				if show_remove_msg and dupe_del:
@@ -326,32 +326,25 @@ if __name__ == "__main__":
 					items = yt.playlistItems()
 					new_ids = []
 					included_id_count = 0
-					# process IDs as the generator produces them instead of waiting for the entire
-					# playlist to finish
-					seen_playlist_ids = set()
-					for yid in get_ids_from_playlist(yt, items, pl_id):
-						# a playlist can contain the same video more than once
-						# preserve the old behavior of adding each ID only once
-						if yid in seen_playlist_ids:
-							continue
-						seen_playlist_ids.add(yid)
-						# skip IDs that are already in there
-						if yid in yt_ids_list:
-							continue
-						# save each new ID immediately, rather than waiting for the entire playlist
-						# to finish processing
-						with open(f"{m.dir_path}/ignore/yt_ids.txt", "a", encoding="utf-8") as f:
-							f.write(f"\n{yid}")
-						yt_ids_list.add(yid)
-						new_ids.append(yid)
-						print(
-							f"{m.bcolors.WARNING}{m.ERASE_ABOVE}Processing "
-							f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC}"
-							f"{m.bcolors.WARNING}, SAVED TO FILE!"
-							f"{m.bcolors.ENDC}"
-						)
-						included_id_count += 1
+					pl = list(dict.fromkeys(get_ids_from_playlist(yt, items, pl_id)))
+					print()
+					final_write_string = ""
+					for yid in pl:
+						if yid not in yt_ids_list:
+							new_ids.append(yid)
+							final_write_string += f"\n{yid}"
+							print(
+								f"{m.bcolors.WARNING}{m.ERASE_ABOVE}Processing "
+								f"{m.bcolors.OKBLUE}{yid}{m.bcolors.ENDC}"
+								f"{m.bcolors.WARNING}, DO NOT EXIT!"
+								f"{m.bcolors.ENDC}"
+							)
+							included_id_count += 1
 					csi += 1
+					if final_write_string:
+						with open(f"{m.dir_path}/ignore/yt_ids.txt", "a") as f:
+							f.write(final_write_string)
+						yt_ids_list.update(new_ids)
 					print()
 					end = time.time()
 					print(
