@@ -145,7 +145,9 @@ def load_yt_id_file(path: str=YT_IDS_FILE_PATH) -> list[str]:
 		invalid_id_list = sorted(
 			[id_ for _, id_ in invalid_ids], key=len, reverse=True)
 		temp = f"(^{escape_no_space(invalid_id_list[0])}\\n?$)" if len(invalid_id_list) == 1 \
-			else "(" + "".join([f"^{escape_no_space(yid)}\\n?$|" for yid in invalid_id_list])[:-1] + ")\n"
+			else "(" + "".join([
+				f"^{escape_no_space(yid)}\\n?$|" for yid in invalid_id_list
+			])[:-1] + ")\n"
 
 		# if path == YT_IDS_FILE_PATH:
 		print(f"{bcolors.WARNING}REMOVE THESE!{bcolors.ENDC}")
@@ -242,10 +244,7 @@ def print_with_timestamp(text: str) -> None:
 	"""
 	Print text into the terminal with a timestamp.
 	"""
-	print(
-		f"{bcolors.HEADER}{datetime.now().strftime(DATE_FORMAT)}"
-		f"{bcolors.ENDC} {text}"
-	)
+	print(f"{bcolors.HEADER}{datetime.now().strftime(DATE_FORMAT)}{bcolors.ENDC} {text}")
 
 
 def format_duration(s: int) -> str:
@@ -253,7 +252,8 @@ def format_duration(s: int) -> str:
 	Formats an int duration in seconds into HH:MM:SS.
 	"""
 	# 3600s = 1hr
-	return time.strftime("%M:%S", time.gmtime(s)) if s < 3600 else time.strftime("%H:%M:%S", time.gmtime(s))
+	return time.strftime("%M:%S", time.gmtime(s)) if s < 3600 \
+		else time.strftime("%H:%M:%S", time.gmtime(s))
 
 
 def progress_bar(
@@ -291,7 +291,8 @@ def wave_chars(
 	noise_level: float=0.1
 ) -> str:
 	"""
-	Generate sequences of chars in a way that it somewhat looks wavy. `chars` should be from low to high "frequency".
+	Generate sequences of chars in a way that it somewhat looks wavy. 
+	`chars` should be from low to high "frequency".
 	"""
 	# ai my ass. my explanations are awful.
 	res = []
@@ -304,9 +305,7 @@ def wave_chars(
 		# +1 and /2 are done to normalize it to [0, 1]
 		sine_val = (math.sin(2 * math.pi * cycles * i / length) + 1) / 2
 		# add random noise to sine wave while limiting it to a valid range
-		noisy_val = min(
-			max(sine_val + random.uniform(-noise_level, noise_level), 0), 1
-		)
+		noisy_val = min(max(sine_val + random.uniform(-noise_level, noise_level), 0), 1)
 		# convert that to an int index
 		idx = int(noisy_val * (len(chars) - 1))
 		res.append(chars[idx])
