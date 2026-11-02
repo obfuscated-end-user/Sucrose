@@ -105,19 +105,13 @@ class Basic(commands.Cog):
 		Fetch a random English Wikipedia article.
 		"""
 		try:
-			response = requests.get(
-				"https://en.wikipedia.org/wiki/Special:Random"
-			)
-
+			response = requests.get("https://en.wikipedia.org/wiki/Special:Random")
 			url = response.url
 			# wikipedia article urls are like:
 			# https://en.wikipedia.org/wiki/Article_name
 			article_name = url.split("/wiki/")[-1].replace("_", " ")
 			markdown_link = f"[.]({url})"
-
-			await ctx.respond(
-				f"Here's a random Wikipedia article for you:\n{markdown_link}"
-			)
+			await ctx.respond(f"Here's a random Wikipedia article for you:\n{markdown_link}")
 		except requests.RequestException as e:
 			await ctx.respond(f"EPIC FAIL: {e}")
 		m.print_with_timestamp(
@@ -160,17 +154,12 @@ class Basic(commands.Cog):
 				for_max = await resp.json()
 		MAX_XKCD_COUNT: int = for_max["num"]
 		# because xkcd #404 actually returns a 404 page
-		id = random.choice(
-			[i for i in range(1, MAX_XKCD_COUNT) if i not in [404]]
-		)
+		id = random.choice([i for i in range(1, MAX_XKCD_COUNT) if i not in [404]])
 		url = f"https://xkcd.com/{id}/info.0.json"
 		async with aiohttp.ClientSession() as session:
 			async with session.get(url) as resp:
 				if resp.status != 200:
-					await ctx.respond(
-						embed=make_embed("something happened lol"),
-						delete_after=20
-					)
+					await ctx.respond(embed=make_embed("something happened lol"), delete_after=20)
 					return
 				data = await resp.json()
 		embed = discord.Embed(
@@ -225,14 +214,7 @@ class Basic(commands.Cog):
 		fumo_path = f"{m.dir_path}/ignore/fumo"
 
 		images = [file for file in os.listdir(fumo_path)
-			if file.lower().endswith((
-				"png",
-				"jpg",
-				"jpeg",
-				"gif",
-				"webp",
-				"mp4"
-			))
+			if file.lower().endswith(("png", "jpg", "jpeg", "gif", "webp", "mp4"))
 		]
 		
 		if not images:
@@ -263,20 +245,11 @@ class Basic(commands.Cog):
 		edgy_path = f"{m.dir_path}/ignore/edgy"
 
 		images = [file for file in os.listdir(edgy_path)
-			if file.lower().endswith((
-				"png",
-				"jpg",
-				"jpeg",
-				"gif",
-				"webp",
-				"mp4"
-			))
+			if file.lower().endswith(("png", "jpg", "jpeg", "gif", "webp", "mp4"))
 		]
 		
 		if not images:
-			await ctx.respond(
-				"Can't send something like this in a Christian server."
-			)
+			await ctx.respond("Can't send something like this in a Christian server.")
 			return
 
 		edgy_img = random.choice(images)
@@ -317,7 +290,9 @@ class Basic(commands.Cog):
 		username = ctx.author.display_name
 		members = ctx.guild.members
 		member_count = ctx.guild.member_count
-		online_count = len([m for m in ctx.guild.members if not m.bot and m.status == discord.Status.online])
+		online_count = len(
+			[m for m in ctx.guild.members if not m.bot and m.status == discord.Status.online]
+		)
 		bots_count = len([m for m in ctx.guild.members if m.bot])
 		current_date = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -377,8 +352,7 @@ class Basic(commands.Cog):
 					return
 				data = await resp.json()
 				response_text = data["choices"][0]["message"]["content"].strip()
-				self.conversations[conv_key].append(
-					{"role": "assistant", "content": response_text})
+				self.conversations[conv_key].append({"role": "assistant", "content": response_text})
 				await ctx.respond(response_text)
 
 
