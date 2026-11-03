@@ -132,31 +132,21 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 		data = await extract_info(search, download=False, process=False)
 		if not data:
-			raise VoiceError(
-				f"Couldn't find anything that matches `{search}`"
-			)
+			raise VoiceError(f"Couldn't find anything that matches `{search}`")
 
 		# if data contains multiple entries, pick the first valid one
 		if "entries" in data:
-			process_info = next(
-				(entry for entry in data["entries"] if entry), None
-			)
+			process_info = next((entry for entry in data["entries"] if entry), None)
 			if not process_info:
-				raise VoiceError(
-					f"Couldn't find any valid entries for `{search}`"
-				)
+				raise VoiceError(f"Couldn't find any valid entries for `{search}`")
 		else:
 			process_info = data
 
 		webpage_url = process_info["webpage_url"]
 		if not webpage_url:
-			raise VoiceError(
-				f"Couldn't find a valid URL for `{search}`"
-			)
+			raise VoiceError(f"Couldn't find a valid URL for `{search}`")
 
-		processed_info = await extract_info(
-			webpage_url, download=False, process=True
-		)
+		processed_info = await extract_info(webpage_url, download=False, process=True)
 		if not processed_info:
 			raise VoiceError(f"Couldn't fetch `{webpage_url}`")
 
@@ -167,9 +157,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 				try:
 					info = processed_info["entries"].pop(0)
 				except IndexError:
-					raise VoiceError(
-						f"Couldn't retrieve any matches for `{webpage_url}`"
-					)
+					raise VoiceError(f"Couldn't retrieve any matches for `{webpage_url}`")
 		else:
 			info = processed_info
 		
@@ -179,10 +167,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 			f"(single track): {end - start}{c.ENDC}"
 		)
 
-		source = cls(
-			ctx, discord.FFmpegPCMAudio(info["url"],
-			**cls.FFMPEG_OPTIONS), data=info
-		)
+		source = cls(ctx, discord.FFmpegPCMAudio(info["url"], **cls.FFMPEG_OPTIONS), data=info)
 
 		return source
 
@@ -204,9 +189,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 		playlist_data = await loop.run_in_executor(None, extract)
 		if not playlist_data or "entries" not in playlist_data:
-			raise VoiceError(
-				f"Couldn't find any entries in the playlist `{playlist_url}`"
-			)
+			raise VoiceError(f"Couldn't find any entries in the playlist `{playlist_url}`")
 
 		sources = []
 		for entry in playlist_data["entries"]:
@@ -222,8 +205,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 		if not sources:
 			raise VoiceError(
-				"Couldn't retrieve any playable videos from the "
-				f"playlist `{playlist_url}`"
+				f"Couldn't retrieve any playable videos from the playlist `{playlist_url}`"
 			)
 		
 		end = time.time()
@@ -275,23 +257,17 @@ class Music(commands.Cog):
 		vc = ctx.voice_client
 		if not ctx.author.voice or not ctx.author.voice.channel:
 			return await ctx.respond(
-				embed=make_embed(
-					"You need to be in a voice channel to play music."
-				))
+				embed=make_embed("You need to be in a voice channel to play music."))
 
 		if not vc:
 			try:
 				vc = await ctx.author.voice.channel.connect()
 			except discord.Forbidden:
 				return await ctx.respond(
-					embed=make_embed(
-						"I don't have permission to join that voice channel."
-					))
+					embed=make_embed("I don't have permission to join that voice channel."))
 			except discord.ClientException:
 				return await ctx.respond(
-					embed=make_embed(
-						"I am already connected to a voice channel."
-					))
+					embed=make_embed("I am already connected to a voice channel."))
 
 		if ctx.author.voice.channel.id != vc.channel.id:
 			return await ctx.respond(
@@ -311,8 +287,7 @@ class Music(commands.Cog):
 					for source in sources:
 						self.track_queue.append(source)
 					await ctx.respond(
-						embed=make_embed(
-							f"Added {len(sources)} tracks to the queue."),
+						embed=make_embed(f"Added {len(sources)} tracks to the queue."),
 						delete_after=15
 					)
 				elif "https://open.spotify.com/t" in search:
@@ -322,9 +297,7 @@ class Music(commands.Cog):
 					)
 					# what the fuck?
 					# string manipulation spoofing
-					soup = BeautifulSoup(
-						requests.get(search).text, "html.parser"
-					)
+					soup = BeautifulSoup(requests.get(search).text, "html.parser")
 					units = soup.find("title").string.split(" - song and lyrics by ")
 					track_name = units[0]
 					artist_name = units[-1].split(" | ")[0]
@@ -340,19 +313,13 @@ class Music(commands.Cog):
 					or "https://open.spotify.com/p" in search:
 					await ctx.respond(
 						embed=make_embed(
-							"Spotify album/playlist links are "
-							"currently not supported."
+							"Spotify album/playlist links are currently not supported."
 						), delete_after=15
 					)
 				else:
 					await ctx.respond(
-						embed=make_embed(
-							f"🔍 Searching for **\"{search}\"**..."),
-							delete_after=15
-						)
-					source = await YTDLSource.create_source(
-						ctx, search, loop=self.bot.loop
-					)
+						embed=make_embed(f"🔍 Searching for **\"{search}\"**..."), delete_after=15)
+					source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
 					self.track_queue.append(source)
 
 				if not vc.is_playing():
@@ -364,8 +331,7 @@ class Music(commands.Cog):
 							add_id_music_bot(yt_id_regex)
 					vc.play(
 						self.current_track,
-						after=lambda e:
-							self.bot.loop.create_task(self.play_next(ctx))
+						after=lambda e: self.bot.loop.create_task(self.play_next(ctx))
 					)
 					self.track_time_start = time.time()
 					await ctx.respond(embed=make_embed(
@@ -415,23 +381,17 @@ class Music(commands.Cog):
 		vc = ctx.voice_client
 		if not ctx.author.voice or not ctx.author.voice.channel:
 			return await ctx.respond(
-				embed=make_embed(
-					"You need to be in a voice channel to play music."
-				))
+				embed=make_embed("You need to be in a voice channel to play music."))
 
 		if not vc:
 			try:
 				vc = await ctx.author.voice.channel.connect()
 			except discord.Forbidden:
 				return await ctx.respond(
-					embed=make_embed(
-						"I don't have permission to join that voice channel."
-					))
+					embed=make_embed("I don't have permission to join that voice channel."))
 			except discord.ClientException:
 				return await ctx.respond(
-					embed=make_embed(
-						"I am already connected to a voice channel."
-					))
+					embed=make_embed("I am already connected to a voice channel."))
 
 		await ctx.respond(embed=make_embed(
 			"⏳️ Adding a random track to the queue...",),
@@ -443,10 +403,7 @@ class Music(commands.Cog):
 			self.track_queue.append(source)
 			self.current_track = self.track_queue[0]
 			self.stop_track = source
-			vc.play(
-				source,
-				after=lambda e: self.bot.loop.create_task(self.play_next(ctx))
-			)
+			vc.play(source, after=lambda e: self.bot.loop.create_task(self.play_next(ctx)))
 			self.track_time_start = time.time()
 			await ctx.respond(embed=make_embed(
 				f"▶️ Now playing: **[{self.current_track.title}]"
@@ -475,10 +432,7 @@ class Music(commands.Cog):
 		e
 	):
 		if isinstance(e, commands.MissingRequiredArgument):
-			await ctx.respond(
-				embed=make_embed("⚠️ Usage: `s!play keywords`."),
-				delete_after=15
-			)
+			await ctx.respond(embed=make_embed("⚠️ Usage: `s!play keywords`."), delete_after=15)
 		else:
 			raise e
 
@@ -505,8 +459,7 @@ class Music(commands.Cog):
 					vc.stop()
 					vc.play(
 						looped_track,
-						after=lambda e:
-							self.bot.loop.create_task(self.play_next(ctx))
+						after=lambda e: self.bot.loop.create_task(self.play_next(ctx))
 					)
 				else:
 					self.track_time_start = time.time()
@@ -519,8 +472,7 @@ class Music(commands.Cog):
 					vc.stop()
 					vc.play(
 						self.current_track,
-						after=lambda e:
-							self.bot.loop.create_task(self.play_next(ctx))
+						after=lambda e: self.bot.loop.create_task(self.play_next(ctx))
 					)
 				await ctx.respond(embed=make_embed(
 					f"▶️ Now playing: **[{self.current_track.title}]"
@@ -549,9 +501,7 @@ class Music(commands.Cog):
 		vc = ctx.voice_client
 		if not ctx.author.voice or not ctx.author.voice.channel:
 			await ctx.respond(
-				embed=make_embed(
-					"You must be connected to a voice"
-					"channel to use this command."),
+				embed=make_embed("You must be connected to a voice channel to use this command."),
 				delete_after=15
 			)
 			return
@@ -564,8 +514,7 @@ class Music(commands.Cog):
 
 		if ctx.author.voice.channel.id != vc.channel.id:
 			await ctx.respond(
-				embed=make_embed(
-					"You must be in the same voice channel as the bot."),
+				embed=make_embed("You must be in the same voice channel as the bot."),
 				delete_after=15
 			)
 			return
@@ -654,8 +603,7 @@ class Music(commands.Cog):
 		if not vc: # if not in voice channel
 			await ctx.respond(
 				embed=make_embed(
-					"You must be in the same voice channel as me"
-					"to stop the current track."),
+					"You must be in the same voice channel as me to stop the current track."),
 				delete_after=15
 			)
 		if not vc.is_playing():
@@ -739,8 +687,7 @@ class Music(commands.Cog):
 		else:
 			await ctx.respond(
 				embed=make_embed(
-					"You must be in the same voice channel "
-					"as the bot to use this command."),
+					"You must be in the same voice channel as the bot to use this command."),
 				delete_after=15
 			)
 		m.print_with_timestamp(
@@ -765,9 +712,7 @@ class Music(commands.Cog):
 			vc = ctx.voice_client
 			if not vc:
 				await ctx.respond(
-					embed=make_embed(
-						"You must be in a voice channel to use"
-						"this command."),
+					embed=make_embed("You must be in a voice channel to use this command."),
 					delete_after=15
 				)
 			if len(self.track_queue) < 1:
@@ -805,10 +750,7 @@ class Music(commands.Cog):
 				queue_embed.set_author(name="Sucrose", icon_url=m.SUCROSE_IMAGE)
 
 				if page < 1 or page > len(tq_chunked):
-					await ctx.respond(
-						embed=make_embed("Invalid page number."),
-						delete_after=15
-					)
+					await ctx.respond(embed=make_embed("Invalid page number."), delete_after=15)
 				else:
 					m.print_with_timestamp(
 						f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
@@ -854,8 +796,7 @@ class Music(commands.Cog):
 		vc = ctx.voice_client
 		if not vc:
 			await ctx.respond(
-				embed=make_embed(
-					"You must be in a voice channel to use this command."),
+				embed=make_embed("You must be in a voice channel to use this command."),
 				delete_after=15
 			)
 		# shuffle the entire queue BUT the current track
@@ -864,10 +805,7 @@ class Music(commands.Cog):
 			self.track_queue.pop()
 		shuffle(temp)
 		self.track_queue += temp
-		await ctx.respond(
-			embed=make_embed("🔀 Shuffled the queue."),
-			delete_after=15
-		)
+		await ctx.respond(embed=make_embed("🔀 Shuffled the queue."), delete_after=15)
 		m.print_with_timestamp(
 			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
 			f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - SHUFFLE"
@@ -886,8 +824,7 @@ class Music(commands.Cog):
 		vc = ctx.voice_client
 		if not vc:
 			await ctx.respond(
-				embed=make_embed(
-					"❌ You must be in a voice channel to use this command."),
+				embed=make_embed("❌ You must be in a voice channel to use this command."),
 				delete_after=15
 			)
 		if not vc.is_playing():
@@ -910,8 +847,7 @@ class Music(commands.Cog):
 				cycles=randrange(1, 9),
 				noise_level=uniform(0, 1)
 			)
-			fake_buttons = "⇌  ♡	   ⏮  ⏸  ⏭	 ≡  ⟲".center(
-				len(progress_bar))
+			fake_buttons = "⇌  ♡	   ⏮  ⏸  ⏭	 ≡  ⟲".center(len(progress_bar))
 
 			# truncate title and artist strings if they become too long
 			# don't expect this to center properly if the string contains
@@ -941,8 +877,7 @@ class Music(commands.Cog):
 			await ctx.respond(embed=now_playing_embed, delete_after=15)
 		else:
 			await ctx.respond(
-				embed=make_embed("❌ Nothing is playing right now."),
-				delete_after=30
+				embed=make_embed("❌ Nothing is playing right now."), delete_after=30
 			)
 		m.print_with_timestamp(
 			f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
@@ -966,17 +901,12 @@ class Music(commands.Cog):
 			removed_track = None
 			if not vc:
 				await ctx.respond(
-					embed=make_embed(
-						"❌ You must be in a voice channel to use this command."
-					),
+					embed=make_embed("❌ You must be in a voice channel to use this command."),
 					delete_after=15
 				)
 			try:
 				if idx < 1:
-					await ctx.respond(
-						embed=make_embed("❌ Invalid index."),
-						delete_after=15
-					)
+					await ctx.respond(embed=make_embed("❌ Invalid index."), delete_after=15)
 				# removing the current track is equivalent to skipping it
 				if idx == 1:
 					# if queue has only one track, 
@@ -1020,20 +950,14 @@ class Music(commands.Cog):
 						delete_after=15
 					)
 			except Exception:
-				await ctx.respond(
-					embed=make_embed("❌ Invalid index."),
-					delete_after=15
-				)
+				await ctx.respond(embed=make_embed("❌ Invalid index."), delete_after=15)
 			m.print_with_timestamp(
 				f"{c.OKBLUE}@{ctx.author.name}{c.ENDC} in "
 				f"{c.OKGREEN}{ctx.guild.name}{c.ENDC} - REMOVE "
 				f"{idx}, {removed_track}"
 			)
 		except ValueError:
-			await ctx.respond(
-				embed=make_embed("⚠️ Usage: `s!remove index`."),
-				delete_after=15
-			)
+			await ctx.respond(embed=make_embed("⚠️ Usage: `s!remove index`."), delete_after=15)
 
 
 	@bot.bridge_command(aliases=["l", "lp"])
@@ -1046,16 +970,11 @@ class Music(commands.Cog):
 		"""
 		vc = ctx.voice_client
 		if not ctx.author.voice or not ctx.author.voice.channel:
-			await ctx.respond(
-				embed=make_embed(
-					"You need to be in a voice channel to play music."
-				)
-			)
+			await ctx.respond(embed=make_embed("You need to be in a voice channel to play music."))
 			return
 		
 		if not vc.is_playing():
-			await ctx.respond(
-				embed=make_embed("❌ Nothing to loop at the moment.")
+			await ctx.respond(embed=make_embed("❌ Nothing to loop at the moment.")
 			)
 			return
 
@@ -1071,8 +990,7 @@ class Music(commands.Cog):
 			self.looping = True
 			await ctx.respond(
 				embed=make_embed(
-					f"🔁 Looping **[{self.current_track.title}]"
-					f"({self.current_track.url})**."),
+					f"🔁 Looping **[{self.current_track.title}] ({self.current_track.url})**."),
 				delete_after=15
 			)
 
