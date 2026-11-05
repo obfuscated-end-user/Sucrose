@@ -63,9 +63,7 @@ def make_embed(text: str) -> discord.Embed:
 
 @bot.event
 async def on_ready() -> None:
-	m.print_with_timestamp(
-		f"{c.OKBLUE}{bot.user.name}{c.ENDC} is ready and online!"
-	)
+	m.print_with_timestamp(f"{c.OKBLUE}{bot.user.name}{c.ENDC} is ready and online!")
 	change_status_task.start()
 
 
@@ -84,10 +82,7 @@ async def on_disconnect() -> None:
 @bot.event
 async def on_application_command_error(ctx, error) -> None:
 	if isinstance(error, commands.BadArgument):
-		await ctx.respond(
-			make_embed("❌ Invalid argument type provided."),
-			ephemeral=True
-		)
+		await ctx.respond(make_embed("❌ Invalid argument type provided."), ephemeral=True)
 	else:
 		raise error
 
@@ -107,10 +102,7 @@ async def change_status_task() -> None:
 	game_name = m.check_date(today, random.choice(sucrose_dict.activity_names))
 	discord_status = random.choice(discord_statuses)
 
-	await bot.change_presence(
-		activity=discord.Game(name=game_name),
-		status=discord_status
-	)
+	await bot.change_presence(activity=discord.Game(name=game_name), status=discord_status)
 
 
 cogs = [
